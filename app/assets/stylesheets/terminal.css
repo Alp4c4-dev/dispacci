@@ -1,0 +1,147 @@
+
+    
+    /* Stile base per tutta la pagina */
+    body {
+        margin: 0;                /* togli margini di default */
+        height: 100vh;            /* altezza = 100% della finestra */
+        background-color: #000; /* sfondo nero */
+        color: #0aff0a;         /* colore testo: verde tipo terminale */
+        font-family: monospace;   /* font stile terminale a larghezza fissa */
+    }
+
+    /* Contenitore del terminale. Colonna: output sopra, input sotto */
+    #terminal {
+        display: none;          /* NASCOSTO all'inizio, si vede solo dopo login */
+        flex-direction: column; /* disposizione verticale: sopra screen, sotto input */
+        height: 100vh;          /* occupa tutta l'altezza della finestra */
+        padding: 16px;          /* un pò di spazio interno */
+        box-sizing: border-box; /* padding incluso nel calcolo dell'altezza */
+    }
+
+    /* Area di output che cresce e può scrollare */
+    #screen {
+        flex: 1;                /* prende tutto lo spazio disponibile */
+        overflow-y: auto;       /* se ci sono tante righe, appare lo scroll verticale */
+        white-space: pre-wrap;  /* preserva a capo e spazi, ma può andare a capo automaticamente */
+    }
+
+    /* Ogni riga di testo (output) nel terminale */
+    .line {
+        margin: 4px 0; /* 4px sopra e sotto, 0px destra e sinistra */
+    }
+
+    /* Barra in basso di input */
+    #inputbar {
+        display: flex;                  /* simbolo e input sulla stessa riga */
+        align-items: center;            /* verticalmente centrati */
+        border-top: 1px solid #0a3;   /* linea sopra la barra, per separare */
+        padding-top: 8px;               /* spazio di 8px tra il bordo superiore e il contenuto interno */
+        margin-top: 8px;                /* spazio di 8px tra la parte superiore della barra e ciò che c'è sopra */
+    }
+
+    /* Simbolo del prompt (/) */
+    .prompt-symbol {
+        margin-right: 8px;
+        color: #0a8;        /* verde un pò diverso per differenziare */
+    }
+
+    /* Campo di input del comando */
+    #prompt {
+        flex: 1;                    /* occupa tutto lo spazio restante nella barra */
+        background: transparent;    /* nessuno sfondo, usa il nero del body */
+        border: none;               /* niente bordo del browser */
+        color: #0aff0a;           /* testo verde */
+        font: inherit;              /* usa lo stesso font del body */
+        outline: none;              /* nessun contorno blu quando è attivo */
+    }
+
+    /* Schermata inserimento codice */
+    #code-screen {
+        display: none;
+    }
+
+    /* Schermata che copre tutta la finestra (login e codice) */
+    .full-screen {
+        position: fixed;            /* si sovrappone a tutta la finestra */
+        inset: 0;                   /* top, right, bottom, left: 0 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #000;
+        gap: 8px;
+    }
+
+    /* Box centrale, riutilizzato da login e codice */
+    .box {
+        border: 1px solid #0a3;
+        padding: 16px 20px;
+        max-width: 320px;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: #020202;
+    }
+
+    .box h1 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 18px;
+    }
+
+    .box label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .box input {
+        width: 100%;
+        background: #000;
+        border: 1px solid #0a3;
+        color: #0aff0a;
+        padding: 6px 8px;
+        font: inherit;
+        box-sizing: border-box;
+        margin-top: 4px;
+    }
+
+    /* contenitore delle 4 caselle del codice */
+    .code-boxes {
+        display: flex;
+        gap: 6px;       /* spazio orizzontale tra le caselle */
+        margin-top: 4px;
+    }
+
+    /* singole caselle per ogni cifra del codice */
+    .code-digit {
+        width: 40px;
+        text-align: center;
+    }
+
+    .box button {
+    margin-top: 12px;
+    width: 100%;
+    padding: 8px 10px;
+    background-color: #0a3;
+    border: none;
+    color: #0eff0e;
+    font: inherit;
+    cursor: pointer;
+    }
+
+    .box button:hover {
+        background-color: #0c5;
+    }
+
+    .error {
+        margin-top: 8px;
+        color: #ff5555;   /* rosso per errore */
+        font-size: 13px;
+        min-height: 16px;   /* spazio riservato anche quando vuoto */
+    }
+
+    /* Riga dedicata alla visualizzazione del timer */
+    .timer-line {
+        color: #0aff0a;
+        font-weight: bold;
+    }

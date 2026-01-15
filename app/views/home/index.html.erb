@@ -1,0 +1,67 @@
+<div data-controller="terminal">
+
+  <div id="login-screen" class="full-screen" data-terminal-target="loginScreen">
+    <div class="box">
+      <h1>Accesso al Portale</h1>
+
+      <label>
+        Username
+        <input id="login-username" type="text" autocomplete="off"
+               data-terminal-target="loginUsername"
+               data-action="keydown.enter->terminal#attemptLogin" />
+      </label>
+
+      <label>
+        Password
+        <input id="login-password" type="password" autocomplete="off"
+               data-terminal-target="loginPassword"
+               data-action="keydown.enter->terminal#attemptLogin" />
+      </label>
+
+      <button id="login-button" type="button" data-action="click->terminal#attemptLogin">Continua</button>
+
+      <div id="login-error" class="error" data-terminal-target="loginError"></div>
+    </div>
+  </div>
+
+  <div id="code-screen" class="full-screen" data-terminal-target="codeScreen" style="display:none;">
+    <div class="box">
+      <h1>Registrazione</h1>
+      <p style="font-size: 13px; margin-bottom: 8px;">Inserisci il codice.</p>
+
+      <label>
+        Codice
+        <div class="code-boxes">
+          <input class="code-digit" type="text" maxlength="1" inputmode="numeric"
+                 data-terminal-target="codeDigit"
+                 data-action="keydown.enter->terminal#attemptRegistration" />
+          <input class="code-digit" type="text" maxlength="1" inputmode="numeric"
+                 data-terminal-target="codeDigit"
+                 data-action="keydown.enter->terminal#attemptRegistration" />
+          <input class="code-digit" type="text" maxlength="1" inputmode="numeric"
+                 data-terminal-target="codeDigit"
+                 data-action="keydown.enter->terminal#attemptRegistration" />
+          <input class="code-digit" type="text" maxlength="1" inputmode="numeric"
+                 data-terminal-target="codeDigit"
+                 data-action="keydown.enter->terminal#attemptRegistration" />
+        </div>
+      </label>
+
+      <button id="code-button" type="button" data-action="click->terminal#attemptRegistration">Conferma e accedi</button>
+
+      <div id="code-error" class="error" data-terminal-target="codeError"></div>
+    </div>
+  </div>
+
+  <div id="terminal" data-terminal-target="terminal" style="display:none;">
+    <div id="screen" data-terminal-target="screen"></div>
+
+    <div id="inputbar">
+      <span class="prompt-symbol"> / </span>
+      <input id="prompt" type="text" autocomplete="off"
+             data-terminal-target="prompt"
+             data-action="keydown.enter->terminal#onPromptEnter" />
+    </div>
+  </div>
+
+</div>
