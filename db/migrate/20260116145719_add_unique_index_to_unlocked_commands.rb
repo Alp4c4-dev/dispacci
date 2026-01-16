@@ -7,8 +7,8 @@ class AddUniqueIndexToUnlockedCommands < ActiveRecord::Migration[8.1]
     end
 
     # Aggiungi indice unico solo se non esiste già
-    unless index_exists?(:unlocked_commands, [:user_id, :command], name: "index_unlocked_commands_on_user_id_and_command")
-      add_index :unlocked_commands, [:user_id, :command],
+    unless index_exists?(:unlocked_commands, [ :user_id, :command ], name: "index_unlocked_commands_on_user_id_and_command")
+      add_index :unlocked_commands, [ :user_id, :command ],
                 unique: true,
                 name: "index_unlocked_commands_on_user_id_and_command"
     end

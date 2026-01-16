@@ -7,6 +7,6 @@ class CreateUnlockedCommands < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :unlocked_commands, [:user_id, :command], unique: true
+    add_index :unlocked_commands, [ :user_id, :command ], unique: true
   end
 end

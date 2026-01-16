@@ -10,7 +10,7 @@ class CommandsController < ApplicationController
     cmd = params[:command].to_s.strip
 
     lines = if cmd.empty?
-      ["> (vuoto)"]
+      [ "> (vuoto)" ]
     else
       dispatch_command(cmd)
     end
@@ -38,7 +38,7 @@ class CommandsController < ApplicationController
     end
 
     # 4) Unknown
-    ["> Comando non riconosciuto: #{cmd}"]
+    [ "> Comando non riconosciuto: #{cmd}" ]
   end
 
   def handle_utility_command(cmd)
@@ -49,19 +49,19 @@ class CommandsController < ApplicationController
         "> - help",
         "> - logout",
         "> - ping",
-        "> - whoami",
+        "> - whoami"
       ]
     when "whoami"
-      ["> Sei autenticato come #{current_user.username}."]
+      [ "> Sei autenticato come #{current_user.username}." ]
     when "ping"
-      ["> pong"]
+      [ "> pong" ]
     when "stop"
       []
     when "total", "totale"
       total = current_user.donations.sum(:seconds)
       m = total / 60
       s = total % 60
-      ["> Totale donato finora: #{m} minut#{m == 1 ? "o" : "i"} e #{s} second#{s == 1 ? "o" : "i"}."]
+      [ "> Totale donato finora: #{m} minut#{m == 1 ? "o" : "i"} e #{s} second#{s == 1 ? "o" : "i"}." ]
     else
       nil
     end
@@ -126,18 +126,18 @@ class CommandsController < ApplicationController
     when "text"
       # Se il testo è vuoto, stampiamo comunque qualcosa di coerente
       lines = payload.split("\n")
-      lines = ["> (contenuto vuoto)"] if lines.empty?
+      lines = [ "> (contenuto vuoto)" ] if lines.empty?
       lines.map { |line| line.start_with?(">") ? line : "> #{line}" }
     when "image"
-      ["> [GALLERIA] Immagine: #{payload.presence || '(non disponibile)'}"]
+      [ "> [GALLERIA] Immagine: #{payload.presence || '(non disponibile)'}" ]
     when "audio"
-      ["> [AUDIO] Traccia: #{payload.presence || '(non disponibile)'}"]
+      [ "> [AUDIO] Traccia: #{payload.presence || '(non disponibile)'}" ]
     when "video"
-      ["> [VIDEO] Clip: #{payload.presence || '(non disponibile)'}"]
+      [ "> [VIDEO] Clip: #{payload.presence || '(non disponibile)'}" ]
     when "command"
-      ["> [COMANDO] #{payload.presence || '(non disponibile)'}"]
+      [ "> [COMANDO] #{payload.presence || '(non disponibile)'}" ]
     else
-      ["> [CONTENUTO] Tipo sconosciuto (#{kind})."]
+      [ "> [CONTENUTO] Tipo sconosciuto (#{kind})." ]
     end
   end
 
