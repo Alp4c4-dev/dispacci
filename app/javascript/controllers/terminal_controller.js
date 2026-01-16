@@ -27,7 +27,60 @@ export default class extends Controller {
 
     // Sessione al refresh
     this.resumeSessionIfAny()
+
+    this.onGlobalKeyDown = (e) => {
+      if (e.key === "Escape") this.backToLogin()
+    }
+
+    document.addEventListener("keydown", this.onGlobalKeyDown)
   }
+
+  disconnect() {
+    document.removeEventListener("keydown", this.onGlobalKeyDown)
+  }
+
+  backToLogin() {
+    this.pendingUser = null
+    this.codeErrorTarget.textContent = ""
+    this.codeDigitTargets.forEach(i => (i.value = ""))
+
+    this.codeScreenTarget.style.display = "none"
+    this.loginScreenTarget.style.display = "flex"
+    this.loginPasswordTarget.value = ""
+    this.loginErrorTarget.textContent = ""
+    this.loginUsernameTarget.focus()
+  }
+
+  resetToLogin() {
+    // Stato
+    this.currentUser = null
+    this.pendingUser = null
+    this.firstTime = false
+    this.terminalShown = false
+
+    // Timer state
+    this.cancelTimer()
+    this.timerLineEl = null
+
+    // UI: nascondi terminale, mostra login
+    this.terminalTarget.style.display = "none"
+    this.codeScreenTarget.style.display = "none"
+    this.loginScreenTarget.style.display = "flex"
+
+    // Pulisci schermo terminale e input
+    this.screenTarget.innerHTML = ""
+    this.promptTarget.value = ""
+
+    // Pulisci errori e campi
+    this.loginErrorTarget.textContent = ""
+    this.codeErrorTarget.textContent = ""
+    this.loginPasswordTarget.value = ""
+    this.codeDigitTargets.forEach(i => (i.value = ""))
+
+    // Focus
+    setTimeout(() => this.loginUsernameTarget.focus(), 20)
+  }
+
 
   // -----------------------------
   // Sessione: /me
@@ -42,6 +95,7 @@ export default class extends Controller {
     const { ok, data } = await this.getJSON("/me")
     if (ok && data.ok) {
       this.currentUser = { username: data.username }
+      this.firstTime = !!data.first_time
       this.loginScreenTarget.style.display = "none"
       this.codeScreenTarget.style.display = "none"
       this.showTerminal()
@@ -120,19 +174,32 @@ export default class extends Controller {
 
     if (ok && data.ok) {
       this.currentUser = { username: data.username }
+      this.firstTime = !!data.first_time
       this.loginScreenTarget.style.display = "none"
       this.showTerminal()
       return
     }
 
-    // login fallito -> schermata codice
-    this.pendingUser = { username, password }
-    this.loginScreenTarget.style.display = "none"
-    this.codeScreenTarget.style.display = "flex"
-    this.codeErrorTarget.textContent = ""
+    // Se l'utente esiste ma la password è sbagliata: resta nel login e mostra errore
+    if (data && data.code === "invalid_password") {
+      this.loginErrorTarget.textContent = data.error || "Credenziali non valide"
+      return
+    }
 
-    this.codeDigitTargets.forEach(i => (i.value = ""))
-    this.codeDigitTargets[0]?.focus()
+    // Solo se l'utente non esiste, proponi registrazione (schermata codice)
+    if (data && data.code === "user_not_found") {
+      this.pendingUser = { username, password }
+      this.loginScreenTarget.style.display = "none"
+      this.codeScreenTarget.style.display = "flex"
+      this.codeErrorTarget.textContent = ""
+
+      this.codeDigitTargets.forEach(i => (i.value = ""))
+      this.codeDigitTargets[0]?.focus()
+      return
+    }
+
+    // fallback generico
+    this.loginErrorTarget.textContent = data?.error || "Errore nel server"
   }
 
   async attemptRegistration(event) {
@@ -162,6 +229,7 @@ export default class extends Controller {
 
     if (ok && data.ok) {
       this.currentUser = { username: data.username }
+      this.firstTime = !!data.first_time
       this.pendingUser = null
 
       this.codeScreenTarget.style.display = "none"
@@ -185,9 +253,15 @@ export default class extends Controller {
 
   bootTerminal() {
     const name = this.currentUser ? this.currentUser.username : "Ribelle"
-    this.printLine("> Benvenutə " + name + ".")
-    this.printLine("> Portale avviato. Interfaccia terminale pronta.")
-    this.printLine("> Digita qualcosa e premi Invio.")
+
+    if (this.firstTime) {
+      this.printLine("> Ciao " + name + ", benvenutə nel Portale! Questa è la nostra base digitale: il punto dell'internet in cui ci siamo rifugiati per tenere viva la Resistenza. Da adesso ne fai parte. Usa le parole chiave che trovi nel Volume 0 per accedere ai contenuti extra e aiutarci davvero. Un unico avvertimento: navigando questo nero in solitudine ci si potrebbe smarrire e convincere di essere insignificanti, ma è tutto il contrario. Ogni tua azione, che ti piaccia o meno, cambierà per sempre la storia di questa Resistenza.")
+
+      this.printLine("> Portale avviato. \nInterfaccia terminale pronta. \nInserisci un comando.")
+    } else {
+      this.printLine("> Ciao " + name + ".")
+      this.printLine("> Portale avviato. \nInterfaccia terminale pronta. \nInserisci un comando.")
+    }
   }
 
   printLine(text) {
@@ -327,8 +401,9 @@ export default class extends Controller {
 
     // client-side
     if (input === "logout") {
-      await this.deleteJSON("/logout")
-      location.reload()
+      const { ok } = await this.deleteJSON("/logout")
+      // Anche se il server risponde male, lato UX torna al login comunque
+      this.resetToLogin()
       return
     }
 
@@ -361,8 +436,8 @@ export default class extends Controller {
     }
 
     if (!ok && data && data.error === "Non autenticato") {
-      this.printLine("> Sessione scaduta. Esegui di nuovo il login.")
-      location.reload()
+      this.printLine("> Sessione scaduta. Torno al login.")
+      this.resetToLogin()
       return
     }
 

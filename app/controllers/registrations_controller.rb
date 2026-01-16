@@ -14,7 +14,11 @@ class RegistrationsController < ApplicationController
 
     if user.save
       session[:user_id] = user.id
-      render json: { ok: true, username: user.username }
+
+      first_time = user.first_seen_at.nil?
+      user.update!(first_seen_at: Time.current) if first_time
+
+      render json: { ok: true, username: user.username, first_time: first_time }
     else
       render json: { ok: false, error: user.errors.full_messages.first }, status: :unprocessable_entity
     end
