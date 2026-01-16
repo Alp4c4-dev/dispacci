@@ -115,14 +115,26 @@ export default class extends Controller {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "X-CSRF-Token": this.csrfToken()
       },
       body: JSON.stringify(body)
     })
 
-    const data = await res.json().catch(() => ({}))
+    const contentType = res.headers.get("content-type") || ""
+    let data = {}
+
+    if (contentType.includes("application/json")) {
+      data = await res.json().catch(() => ({}))
+    } else {
+      // Rails sta rispondendo HTML (tipico delle pagine errore)
+      const text = await res.text().catch(() => "")
+      data = { error: text.slice(0, 200) } // primi 200 caratteri
+    }
+
     return { ok: res.ok, data }
   }
+
 
   async deleteJSON(url) {
     const res = await fetch(url, {
@@ -425,13 +437,42 @@ export default class extends Controller {
     }
 
     if (input === "timer") {
-      await this.trackUnlock("timer")
+      const { ok, data } = await this.postJSON("/commands", { command: "timer" })
+
+      if (ok && data.ok && Array.isArray(data.lines)) {
+        this.printLines(data.lines)
+      } else if (!ok && data && data.error === "Non autenticato") {
+        this.printLine("> Sessione scaduta. Torno al login.")
+        this.resetToLogin()
+        return
+      } else {
+        this.printLine("> Errore nel server.")
+        return
+      }
+
       this.startTimer()
       return
     }
 
     if (input === "stop") {
-      await this.trackUnlock("stop")
+      const { ok, data } = await this.postJSON("/commands", { command: "stop" })
+
+      if (!ok && data && data.error === "Non autenticato") {
+        this.printLine("> Sessione scaduta. Torno al login.")
+        this.resetToLogin()
+        return
+      }
+
+      if (!ok) {
+        this.printLine("> Errore nel server.")
+        return
+      }
+
+      // se il server restituisce lines non vuote, stampale (qui saranno vuote)
+      if (data && data.ok && Array.isArray(data.lines) && data.lines.length > 0) {
+        this.printLines(data.lines)
+      }
+
       await this.stopTimer()
       return
     }
@@ -460,7 +501,7 @@ export default class extends Controller {
       return
     }
 
-    this.printLine("> Errore nel server.")
+    this.printLine("> Errore nel server: " + (data?.error || "500"))
   }
 
 

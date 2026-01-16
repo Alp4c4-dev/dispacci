@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_16_145719) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_16_200315) do
   create_table "donations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "ended_at"
@@ -21,6 +21,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_145719) do
     t.index ["user_id"], name: "index_donations_on_user_id"
   end
 
+  create_table "unlockables", force: :cascade do |t|
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.string "kind", null: false
+    t.text "payload"
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_unlockables_on_key", unique: true
+  end
+
   create_table "unlocked_commands", force: :cascade do |t|
     t.string "command", null: false
     t.datetime "created_at", null: false
@@ -28,6 +38,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_145719) do
     t.integer "user_id", null: false
     t.index ["user_id", "command"], name: "index_unlocked_commands_on_user_id_and_command", unique: true
     t.index ["user_id"], name: "index_unlocked_commands_on_user_id"
+  end
+
+  create_table "user_unlocks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "unlockable_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["unlockable_id"], name: "index_user_unlocks_on_unlockable_id"
+    t.index ["user_id"], name: "index_user_unlocks_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -41,4 +60,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_145719) do
 
   add_foreign_key "donations", "users"
   add_foreign_key "unlocked_commands", "users"
+  add_foreign_key "user_unlocks", "unlockables"
+  add_foreign_key "user_unlocks", "users"
 end
