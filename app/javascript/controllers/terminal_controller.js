@@ -133,6 +133,23 @@ export default class extends Controller {
     return { ok: res.ok, data }
   }
 
+  async trackUnlock(cmd) {
+    const { ok, data } = await this.postJSON("/unlocks", { command: cmd })
+
+    // Se non autenticato, comportati come negli altri punti
+    if (!ok && data && data.error === "Non autenticato") {
+      this.printLine("> Sessione scaduta. Torno al login.")
+      this.resetToLogin()
+      return
+    }
+
+    // Se è stato davvero sbloccato adesso, stampa il messaggio
+    if (ok && data && data.ok && data.unlocked) {
+      this.printLine("> Nuovo codice sbloccato.")
+      this.printLine("> Codici sbloccati " + data.unlocked_count + "/" + data.unlocked_total + ".")
+    }
+  }
+
   // -----------------------------
   // UX 4-digit code
   // -----------------------------
@@ -408,11 +425,13 @@ export default class extends Controller {
     }
 
     if (input === "timer") {
+      await this.trackUnlock("timer")
       this.startTimer()
       return
     }
 
     if (input === "stop") {
+      await this.trackUnlock("stop")
       await this.stopTimer()
       return
     }

@@ -18,4 +18,6 @@ Rails.application.routes.draw do
   post "/commands", to: "commands#create"
 
   post "/donations", to: "donations#create"
+
+  post "/unlocks", to: "unlocked_commands#create"
 end
