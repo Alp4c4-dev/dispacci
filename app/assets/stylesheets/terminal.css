@@ -28,6 +28,23 @@
     /* Ogni riga di testo (output) nel terminale */
     .line {
         margin: 4px 0; /* 4px sopra e sotto, 0px destra e sinistra */
+        white-space: pre-wrap;
+        padding-left: 1.5em;
+        position: relative;
+    }
+
+    .line::before {
+        content: ">";
+        position: absolute;
+        left: 0;
+    }
+
+    .line.no-prompt::before {
+        content: "";
+    }
+
+    .line.no-prompt {
+        padding-left: 0;
     }
 
     /* Barra in basso di input */

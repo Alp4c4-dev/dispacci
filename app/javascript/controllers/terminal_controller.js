@@ -150,15 +150,15 @@ export default class extends Controller {
 
     // Se non autenticato, comportati come negli altri punti
     if (!ok && data && data.error === "Non autenticato") {
-      this.printLine("> Sessione scaduta. Torno al login.")
+      this.printLine("Sessione scaduta. Torno al login.")
       this.resetToLogin()
       return
     }
 
     // Se è stato davvero sbloccato adesso, stampa il messaggio
     if (ok && data && data.ok && data.unlocked) {
-      this.printLine("> Nuovo codice sbloccato.")
-      this.printLine("> Codici sbloccati " + data.unlocked_count + "/" + data.unlocked_total + ".")
+      this.printLine("Nuovo codice sbloccato.")
+      this.printLine("Codici sbloccati " + data.unlocked_count + "/" + data.unlocked_total + ".")
     }
   }
 
@@ -284,18 +284,25 @@ export default class extends Controller {
     const name = this.currentUser ? this.currentUser.username : "Ribelle"
 
     if (this.firstTime) {
-      this.printLine("> Ciao " + name + ", benvenutə nel Portale! Questa è la nostra base digitale: il punto dell'internet in cui ci siamo rifugiati per tenere viva la Resistenza. Da adesso ne fai parte. Usa le parole chiave che trovi nel Volume 0 per accedere ai contenuti extra e aiutarci davvero. Un unico avvertimento: navigando questo nero in solitudine ci si potrebbe smarrire e convincere di essere insignificanti, ma è tutto il contrario. Ogni tua azione, che ti piaccia o meno, cambierà per sempre la storia di questa Resistenza.")
+      this.printLine("Ciao " + name + ", benvenutə nel Portale! \n\nQuesta è la nostra base digitale: il punto dell'internet in cui ci siamo rifugiati per tenere viva la Resistenza.\nDa adesso ne fai parte.\n\nUsa le parole chiave che trovi nel Volume 0 per accedere ai contenuti extra e aiutarci davvero.\n\nUn unico avvertimento: navigando questo nero in solitudine ci si potrebbe smarrire e convincere di essere insignificanti, ma è tutto il contrario.\n\nOgni tua azione, che ti piaccia o meno, cambierà per sempre la storia di questa Resistenza.")
 
-      this.printLine("> Portale avviato. \nInterfaccia terminale pronta. \nInserisci un comando.")
+      this.printLine("Portale avviato.")
+      this.printReadyPrompt()
     } else {
-      this.printLine("> Ciao " + name + ".")
-      this.printLine("> Portale avviato. \nInterfaccia terminale pronta. \nInserisci un comando.")
+      this.printLine("Ciao " + name + ". Portale avviato.")
+      this.printReadyPrompt()
     }
   }
 
   printLine(text) {
     const line = document.createElement("div")
     line.className = "line"
+
+    if (text.startsWith("\u0000")) {
+      line.classList.add("no-prompt")
+      text = text.slice(1)
+    }
+    
     line.textContent = text
     this.screenTarget.appendChild(line)
     this.screenTarget.scrollTop = this.screenTarget.scrollHeight
@@ -303,6 +310,10 @@ export default class extends Controller {
 
   printLines(lines) {
     for (const line of lines) this.printLine(line)
+  }
+
+  printReadyPrompt() {
+    this.printLine("Interfaccia terminale pronta. Inserisci un comando.")
   }
 
   // -----------------------------
@@ -332,13 +343,11 @@ export default class extends Controller {
 
   startTimer() {
     if (this.timerActive) {
-      this.printLine("> Timer già attivo. Digita 'stop' per fermarlo.")
+      this.printLine("Timer già attivo. Digita 'stop' per fermarlo.")
       return
     }
 
-    this.printLine("> Avvio timer di disconnessione in corso.")
-    this.printLine("> ATTENZIONE: utilizzare il comando 'stop' per interrompere la donazione di tempo.")
-    this.printLine("> Un arresto improvviso del terminale o l'utilizzo di altre funzioni può compromettere la sicurezza della trasmissione.")
+    this.printLine("Avvio timer di disconnessione in corso.\nATTENZIONE: utilizzare il comando 'stop' per interrompere la donazione di tempo.\nUn arresto improvviso del terminale o l'utilizzo di altre funzioni può compromettere la sicurezza della trasmissione.")
 
     this.timerActive = true
     this.timerStartedAtIso = new Date().toISOString()
@@ -357,7 +366,8 @@ export default class extends Controller {
 
   async stopTimer() {
     if (!this.timerActive) {
-      this.printLine("> Nessun timer attivo")
+      this.printLine("Nessun timer attivo")
+      this.printReadyPrompt()
       return
     }
 
@@ -372,7 +382,7 @@ export default class extends Controller {
 
     // Messaggio UI
     this.printLine(
-      "> Grazie per la tua donazione. Un ribelle adesso potrà godere di " +
+      "Grazie per la tua donazione. Un ribelle adesso potrà godere di " +
         minutes + " minut" + (minutes === 1 ? "o" : "i") +
         " e " +
         seconds + " second" + (seconds === 1 ? "o" : "i") +
@@ -394,15 +404,16 @@ export default class extends Controller {
       const totalMin = Math.floor(total / 60)
       const totalSec = total % 60
       this.printLine(
-        "> Totale donato finora: " +
+        "Totale donato finora: " +
           totalMin + " minut" + (totalMin === 1 ? "o" : "i") +
           " e " +
           totalSec + " second" + (totalSec === 1 ? "o" : "i") +
           "."
       )
     } else {
-      this.printLine("> (Impossibile salvare la donazione: " + (data.error || "errore") + ")")
+      this.printLine("(Impossibile salvare la donazione: " + (data.error || "errore") + ")")
     }
+    this.printReadyPrompt()
   }
 
   cancelTimer() {
@@ -411,7 +422,7 @@ export default class extends Controller {
     clearInterval(this.timerIntervalId)
     this.timerIntervalId = null
 
-    this.printLine("> Timer azzerato.")
+    this.printLine("Timer azzerato.")
     this.updateTimerDisplay(0)
 
     this.timerActive = false
@@ -442,11 +453,11 @@ export default class extends Controller {
       if (ok && data.ok && Array.isArray(data.lines)) {
         this.printLines(data.lines)
       } else if (!ok && data && data.error === "Non autenticato") {
-        this.printLine("> Sessione scaduta. Torno al login.")
+        this.printLine("Sessione scaduta. Torno al login.")
         this.resetToLogin()
         return
       } else {
-        this.printLine("> Errore nel server.")
+        this.printLine("Errore nel server.")
         return
       }
 
@@ -458,13 +469,13 @@ export default class extends Controller {
       const { ok, data } = await this.postJSON("/commands", { command: "stop" })
 
       if (!ok && data && data.error === "Non autenticato") {
-        this.printLine("> Sessione scaduta. Torno al login.")
+        this.printLine("Sessione scaduta. Torno al login.")
         this.resetToLogin()
         return
       }
 
       if (!ok) {
-        this.printLine("> Errore nel server.")
+        this.printLine("Errore nel server.")
         return
       }
 
@@ -480,9 +491,10 @@ export default class extends Controller {
     if (this.timerActive) {
       this.timerWarningCount++
       if (this.timerWarningCount === 1) {
-        this.printLine("> Attenzione. Timer attivo. Digita 'stop' per fermarlo.")
+        this.printLine("Attenzione. Timer attivo. Digita 'stop' per fermarlo.")
       } else {
         this.cancelTimer()
+        this.printReadyPrompt()
       }
       return
     }
@@ -492,16 +504,17 @@ export default class extends Controller {
 
     if (ok && data.ok && Array.isArray(data.lines)) {
       this.printLines(data.lines)
+      this.printReadyPrompt()
       return
     }
 
     if (!ok && data && data.error === "Non autenticato") {
-      this.printLine("> Sessione scaduta. Torno al login.")
+      this.printLine("Sessione scaduta. Torno al login.")
       this.resetToLogin()
       return
     }
 
-    this.printLine("> Errore nel server: " + (data?.error || "500"))
+    this.printLine("Errore nel server: " + (data?.error || "500"))
   }
 
 

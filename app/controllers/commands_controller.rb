@@ -9,14 +9,16 @@ class CommandsController < ApplicationController
   def create
     cmd = params[:command].to_s.strip
 
-    lines = if cmd.empty?
-      [ "> (vuoto)" ]
-    else
-      dispatch_command(cmd)
-    end
+    lines =
+      if cmd.empty?
+        ["(vuoto)"]
+      else
+        dispatch_command(cmd)
+      end
 
     render json: { ok: true, lines: lines }
   end
+
 
 
   private
@@ -38,30 +40,30 @@ class CommandsController < ApplicationController
     end
 
     # 4) Unknown
-    [ "> Comando non riconosciuto: #{cmd}" ]
+    [ "Comando non riconosciuto: #{cmd}" ]
   end
 
   def handle_utility_command(cmd)
     case cmd
     when "help"
       [
-        "> Comandi di supporto:",
-        "> - help",
-        "> - logout",
-        "> - ping",
-        "> - whoami"
+        "Comandi di supporto:",
+        "- help",
+        "- logout",
+        "- ping",
+        "- whoami"
       ]
     when "whoami"
-      [ "> Sei autenticato come #{current_user.username}." ]
+      [ "Sei autenticatə come #{current_user.username}." ]
     when "ping"
-      [ "> pong" ]
+      [ "pong" ]
     when "stop"
       []
     when "total", "totale"
       total = current_user.donations.sum(:seconds)
       m = total / 60
       s = total % 60
-      [ "> Totale donato finora: #{m} minut#{m == 1 ? "o" : "i"} e #{s} second#{s == 1 ? "o" : "i"}." ]
+      [ "Totale donato finora: #{m} minut#{m == 1 ? "o" : "i"} e #{s} second#{s == 1 ? "o" : "i"}." ]
     else
       nil
     end
@@ -72,16 +74,16 @@ class CommandsController < ApplicationController
     unlocked_ids = current_user.user_unlocks.pluck(:unlockable_id).to_set
 
     lines = []
-    lines << "> Voci sbloccate:"
+    lines << "Voci sbloccate:"
 
     if unlockables.empty?
-      lines << "> (nessun contenuto nel catalogo)"
+      lines << "(nessun contenuto nel catalogo)"
       return lines
     end
 
     unlockables.each do |u|
       visible = unlocked_ids.include?(u.id) ? u.key : "???"
-      lines << "> - #{visible}"
+      lines << "\u0000  - #{visible}"
     end
 
     lines
@@ -93,17 +95,47 @@ class CommandsController < ApplicationController
 
     created = create_user_unlock_if_needed(unlockable)
     if created
-      lines << "> Nuovo contenuto sbloccato."
-      lines << "> Categoria: #{unlockable.category}."
 
+      # contatore globale (se vuoi tenerlo)
       count = current_user.user_unlocks.count
       total = Unlockable.count
-      lines << "> Codici sbloccati #{count}/#{total}."
+      lines << "Nuovo codice sbloccato!\nCodici sbloccati: #{count}/#{total}."
+
+      # blocco personalizzato per categoria
+      lines.concat(category_unlock_message_lines(unlockable.category))
     end
 
     lines.concat(render_unlockable_payload_lines(unlockable))
     lines
   end
+
+  def category_unlock_message_lines(category)
+    unlocked_in_cat = current_user
+      .user_unlocks
+      .joins(:unlockable)
+      .where(unlockables: { category: category })
+      .count
+
+    total_in_cat = Unlockable.where(category: category).count
+
+    case category
+    when "Dossier"
+      [
+        "Nuovo file acquisito!\nFile aggiunti al Dossier #{unlocked_in_cat}/#{total_in_cat}.\nDigita /Dossier per accedere ai tuoi file."
+      ]
+    when "Galleria"
+      [
+        "Nuova testimonianza acquisita!\nTestimonianze aggiunte alla Galleria #{unlocked_in_cat}/#{total_in_cat}.\nDigita /Galleria per accedere alle testimonianze raccolte."
+      ]
+    when "Armeria"
+      [
+        "Nuova arma raccolta!\nArmi sbloccate #{unlocked_in_cat}/#{total_in_cat}.\nDigita /Armeria per accedere alle tue armi."
+      ]
+    else
+      []
+    end
+  end
+
 
   def create_user_unlock_if_needed(unlockable)
     # Se esiste già, non deve “risbloccare”.
@@ -122,22 +154,13 @@ class CommandsController < ApplicationController
     kind = unlockable.kind.to_s
     payload = unlockable.payload.to_s
 
+    return [] if payload.blank?
+
     case kind
-    when "text"
-      # Se il testo è vuoto, stampiamo comunque qualcosa di coerente
-      lines = payload.split("\n")
-      lines = [ "> (contenuto vuoto)" ] if lines.empty?
-      lines.map { |line| line.start_with?(">") ? line : "> #{line}" }
-    when "image"
-      [ "> [GALLERIA] Immagine: #{payload.presence || '(non disponibile)'}" ]
-    when "audio"
-      [ "> [AUDIO] Traccia: #{payload.presence || '(non disponibile)'}" ]
-    when "video"
-      [ "> [VIDEO] Clip: #{payload.presence || '(non disponibile)'}" ]
-    when "command"
-      [ "> [COMANDO] #{payload.presence || '(non disponibile)'}" ]
+    when "text", "image", "audio", "video", "command"
+      [payload]
     else
-      [ "> [CONTENUTO] Tipo sconosciuto (#{kind})." ]
+      []
     end
   end
 
