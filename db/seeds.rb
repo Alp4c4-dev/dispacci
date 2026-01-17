@@ -22,7 +22,7 @@ Unlockable.upsert_all([
   # Armeria
   # ----------------
   { key: "timer",           category: "Armeria",  kind: "command", payload: nil },
-  { key: "solitudine",      category: "Armeria",  kind: "command", payload: nil },
+  { key: "solitudine",      category: "Armeria",  kind: "command", payload: "Solitudine è una parola che hanno cancellato. Per poter tornare a usarla dobbiamo recuperarne il significato. Fornisci la tua definizione di 'solitudine'." },
   { key: "html",            category: "Armeria",  kind: "text", payload: nil },
   { key: "Aurelius",        category: "Armeria",  kind: "command", payload: nil }
 ], unique_by: :key)

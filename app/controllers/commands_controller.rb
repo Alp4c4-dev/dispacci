@@ -5,43 +5,54 @@ class CommandsController < ApplicationController
 
   CATEGORY_COMMANDS = %w[Dossier Galleria Armeria].freeze
   UTILITY_COMMANDS  = %w[help whoami ping total totale stop].freeze
+  DEFINITION_KEYWORDS = %w[solitudine].freeze
 
   def create
     cmd = params[:command].to_s.strip
 
-    lines =
+    result =
       if cmd.empty?
-        ["(vuoto)"]
+        { lines: ["(vuoto)"] }
       else
-        dispatch_command(cmd)
+        dispatch_command(cmd) 
       end
 
-    render json: { ok: true, lines: lines }
+    render json: { ok: true }.merge(result)
   end
-
-
 
   private
 
   def dispatch_command(cmd)
-    # 1) Utility commands: non partecipano allo sblocco
+    # 1) Utility commands
     utility_lines = handle_utility_command(cmd)
-    return utility_lines if utility_lines
+    return { lines: utility_lines } if utility_lines
 
-    # 2) Categoria: lista keyword mascherate
+    # 2) Categoria
     if CATEGORY_COMMANDS.include?(cmd)
-      return category_listing_lines(cmd)
+      return { lines: category_listing_lines(cmd) }
     end
 
-    # 3) Keyword: match case-sensitive esatto su Unlockable.key
+    # 3) Keyword unlockable
     unlockable = Unlockable.find_by(key: cmd)
     if unlockable
-      return unlockable_lines_for(unlockable)
+      lines = unlockable_lines_for(unlockable)
+
+      # Se è una keyword “definizione”, dopo aver stampato le righe
+      # chiediamo al frontend di aspettare la risposta dell'utente
+      if DEFINITION_KEYWORDS.include?(cmd)
+        return {
+          lines: lines,
+          awaiting: { kind: "definition", word: cmd }
+        }
+      end
+
+      return { lines: lines }
     end
 
     # 4) Unknown
-    [ "Comando non riconosciuto: #{cmd}" ]
+    { lines: ["Comando non riconosciuto: #{cmd}"] }
   end
+
 
   def handle_utility_command(cmd)
     case cmd
@@ -164,13 +175,4 @@ class CommandsController < ApplicationController
     end
   end
 
-  def require_login!
-    return if current_user
-    render json: { ok: false, error: "Non autenticato" }, status: :unauthorized
-  end
-
-  def current_user
-    return @current_user if defined?(@current_user)
-    @current_user = User.find_by(id: session[:user_id])
-  end
 end

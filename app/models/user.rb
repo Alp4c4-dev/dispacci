@@ -5,7 +5,7 @@ class User < ApplicationRecord
   has_many :unlocked_commands, dependent: :destroy
   has_many :user_unlocks, dependent: :destroy
   has_many :unlockables, through: :user_unlocks
-
+  has_many :word_definitions, dependent: :destroy
 
   validates :username, presence: true, uniqueness: true
 end

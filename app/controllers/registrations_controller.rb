@@ -1,5 +1,5 @@
 class RegistrationsController < ApplicationController
-  FIXED_CODE = "1234"
+  FIXED_CODE = "Testa"
 
   def create
     username = params[:username].to_s.strip

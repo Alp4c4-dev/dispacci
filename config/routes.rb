@@ -20,4 +20,7 @@ Rails.application.routes.draw do
   post "/donations", to: "donations#create"
 
   post "/unlocks", to: "unlocked_commands#create"
+
+  post "/definitions", to: "word_definitions#create"
+
 end

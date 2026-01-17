@@ -12,6 +12,7 @@ export default class extends Controller {
     this.currentUser = null
     this.pendingUser = null
     this.terminalShown = false
+    this.awaiting = null
 
     // Timer state
     this.timerActive = false
@@ -242,13 +243,20 @@ export default class extends Controller {
       return
     }
 
-    const digits = this.codeDigitTargets.map(input => input.value.trim())
-    if (digits.some(d => d === "")) {
+    const chars = this.codeDigitTargets.map(input => (input.value || "").trim())
+
+    if (chars.some(c => c === "")) {
       this.codeErrorTarget.textContent = "Inserire il codice"
       return
     }
 
-    const code = digits.join("")
+    const code = chars.join("")
+
+    if (!/^[A-Za-z]{5}$/.test(code)) {
+      this.codeErrorTarget.textContent = "Inserire 5 lettere"
+      return
+    }
+
 
     const { ok, data } = await this.postJSON("/register", {
       username: this.pendingUser.username,
@@ -302,7 +310,7 @@ export default class extends Controller {
       line.classList.add("no-prompt")
       text = text.slice(1)
     }
-    
+
     line.textContent = text
     this.screenTarget.appendChild(line)
     this.screenTarget.scrollTop = this.screenTarget.scrollHeight
@@ -437,6 +445,35 @@ export default class extends Controller {
     const input = raw.trim()
     if (!input) return
 
+    // Se stiamo aspettando una definizione, il prossimo input NON è un comando.
+    // Lo salviamo su DB e non stampiamo "/"
+    if (this.awaiting && this.awaiting.kind === "definition") {
+      const definition = input
+
+      // Mostra a schermo quello che l'utente ha scritto (senza "/")
+      this.printLine(definition)
+
+      const { ok, data } = await this.postJSON("/definitions", {
+        word: this.awaiting.word,
+        definition
+      })
+
+      if (ok && data && data.ok) {
+        const name = this.currentUser?.username || "Ribelle"
+        this.printLine("Grazie " + name + "! Messaggio ricevuto. Adesso tocca a noi diffonderlo.")
+      } else if (!ok && data && data.error === "Non autenticato") {
+        this.printLine("Sessione scaduta. Torno al login.")
+        this.resetToLogin()
+        return
+      } else {
+        this.printLine("Errore: " + (data?.error || "impossibile salvare"))
+      }
+
+      this.awaiting = null
+      this.printReadyPrompt()
+      return
+    }
+
     this.printLine("/" + input)
 
     // client-side
@@ -504,6 +541,13 @@ export default class extends Controller {
 
     if (ok && data.ok && Array.isArray(data.lines)) {
       this.printLines(data.lines)
+
+      // Se il server ci dice che ora aspetta una definizione, entriamo in modalità "awaiting"
+      if (data.awaiting) {
+        this.awaiting = data.awaiting
+        return
+      }
+
       this.printReadyPrompt()
       return
     }

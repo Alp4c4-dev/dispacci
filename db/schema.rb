@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_16_200315) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_17_170626) do
   create_table "donations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "ended_at"
@@ -58,8 +58,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_200315) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  create_table "word_definitions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "definition"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "word"
+    t.index ["user_id", "word"], name: "index_word_definitions_on_user_id_and_word", unique: true
+    t.index ["user_id"], name: "index_word_definitions_on_user_id"
+  end
+
   add_foreign_key "donations", "users"
   add_foreign_key "unlocked_commands", "users"
   add_foreign_key "user_unlocks", "unlockables"
   add_foreign_key "user_unlocks", "users"
+  add_foreign_key "word_definitions", "users"
 end
