@@ -169,7 +169,11 @@ class CommandsController < ApplicationController
 
     case kind
     when "text", "image", "audio", "video", "command"
-      [payload]
+      # Permette di dividere un payload in più messaggi usando [[NEXT]]
+      payload
+        .split("[[NEXT]]")
+        .map(&:strip)
+        .reject(&:blank?)
     else
       []
     end
