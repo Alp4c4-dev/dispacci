@@ -316,7 +316,6 @@ export default class extends Controller {
     return safe
   }
 
-
   printLine(text) {
     const line = document.createElement("div")
     line.className = "line"
@@ -339,7 +338,6 @@ export default class extends Controller {
     this.screenTarget.scrollTop = this.screenTarget.scrollHeight
   }
 
-
   printLines(lines) {
     for (const line of lines) this.printLine(line)
   }
@@ -347,6 +345,55 @@ export default class extends Controller {
   printReadyPrompt() {
     this.printLine("Interfaccia terminale pronta. Inserisci un comando.")
   }
+
+  renderItems(items) {
+    for (const item of items) this.renderItem(item)
+    this.screenTarget.scrollTop = this.screenTarget.scrollHeight
+  }
+
+  renderItem(item) {
+    if (!item || !item.type) return
+
+    if (item.type === "text") {
+      this.printLine(item.text ?? "")
+      return
+    }
+
+    const line = document.createElement("div")
+    line.className = "line no-prompt"
+
+    const url = item.url
+    if (!url) {
+      line.textContent = "(contenuto non disponibile)"
+      this.screenTarget.appendChild(line)
+      return
+    }
+
+    if (item.type === "image") {
+      const img = document.createElement("img")
+      img.src = url
+      img.alt = item.alt || ""
+      img.className = "terminal-media terminal-image"
+      line.appendChild(img)
+    } else if (item.type === "audio") {
+      const audio = document.createElement("audio")
+      audio.src = url
+      audio.controls = true
+      audio.className = "terminal-media terminal-audio"
+      line.appendChild(audio)
+    } else if (item.type === "video") {
+      const video = document.createElement("video")
+      video.src = url
+      video.controls = true
+      video.className = "terminal-media terminal-video"
+      line.appendChild(video)
+    } else {
+      line.textContent = "(tipo contenuto sconosciuto)"
+    }
+
+    this.screenTarget.appendChild(line)
+  }
+
 
   // -----------------------------
   // TIMER (front-end)
@@ -563,10 +610,13 @@ export default class extends Controller {
     // server-side
     const { ok, data } = await this.postJSON("/commands", { command: input })
 
-    if (ok && data.ok && Array.isArray(data.lines)) {
-      this.printLines(data.lines)
+    if (ok && data.ok) {
+      if (Array.isArray(data.items)) {
+        this.renderItems(data.items)
+      } else if (Array.isArray(data.lines)) {
+        this.printLines(data.lines) // fallback per utility/categorie
+      }
 
-      // Se il server ci dice che ora aspetta una definizione, entriamo in modalità "awaiting"
       if (data.awaiting) {
         this.awaiting = data.awaiting
         return

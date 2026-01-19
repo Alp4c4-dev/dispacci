@@ -35,18 +35,15 @@ class CommandsController < ApplicationController
     # 3) Keyword unlockable
     unlockable = Unlockable.find_by(key: cmd)
     if unlockable
-      lines = unlockable_lines_for(unlockable)
+      result = unlockable_lines_for(unlockable)
 
       # Se è una keyword “definizione”, dopo aver stampato le righe
       # chiediamo al frontend di aspettare la risposta dell'utente
       if DEFINITION_KEYWORDS.include?(cmd)
-        return {
-          lines: lines,
-          awaiting: { kind: "definition", word: cmd }
-        }
+        result[:awaiting] = { kind: "definition", word: cmd }
       end
 
-      return { lines: lines }
+      return result
     end
 
     # 4) Unknown
@@ -106,19 +103,19 @@ class CommandsController < ApplicationController
 
     created = create_user_unlock_if_needed(unlockable)
     if created
-
-      # contatore globale (se vuoi tenerlo)
       count = current_user.user_unlocks.count
       total = Unlockable.count
       lines << "Nuovo codice sbloccato!\nCodici sbloccati: #{count}/#{total}."
-
-      # blocco personalizzato per categoria
       lines.concat(category_unlock_message_lines(unlockable.category))
     end
 
-    lines.concat(render_unlockable_payload_lines(unlockable))
-    lines
+    # items = (testi di sistema) + (payload media/testo)
+    items = lines.map { |t| { type: "text", text: t } }
+    items.concat(render_unlockable_payload_items(unlockable))
+
+    { lines: lines, items: items }
   end
+
 
   def category_unlock_message_lines(category)
     unlocked_in_cat = current_user
@@ -174,6 +171,34 @@ class CommandsController < ApplicationController
         .split("[[NEXT]]")
         .map(&:strip)
         .reject(&:blank?)
+    else
+      []
+    end
+  end
+
+  def render_unlockable_payload_items(unlockable)
+    kind = unlockable.kind.to_s
+    payload = unlockable.payload.to_s
+
+    return [] if payload.blank?
+
+    case kind
+    when "text", "command"
+      payload
+        .split("[[NEXT]]")
+        .map(&:strip)
+        .reject(&:blank?)
+        .map { |part| { type: "text", text: part } }
+
+    when "image"
+      [{ type: "image", url: payload }]
+
+    when "audio"
+      [{ type: "audio", url: payload }]
+
+    when "video"
+      [{ type: "video", url: payload }]
+
     else
       []
     end

@@ -15,15 +15,15 @@ Unlockable.upsert_all(
     { key: "T-Corp", category: "Dossier", kind: "text", payload: payload_for.call("T-Corp.txt") },
     { key: "2522", category: "Dossier", kind: "text", payload: payload_for.call("2522.txt") },
     { key: "GrandeNuvola", category: "Dossier", kind: "text", payload: nil },
-    { key: "KemmigEdition", category: "Dossier", kind: "image", payload: nil },
+    { key: "KemmigEdition", category: "Dossier", kind: "image", payload: "/media/img/kemmigedition.png" },
 
     # ----------------
     # Galleria
     # ----------------
-    { key: "crescente", category: "Galleria", kind: "image", payload: nil },
+    { key: "crescente", category: "Galleria", kind: "image", payload: "/media/img/crescente.png" },
     { key: "audiocompleto", category: "Galleria", kind: "audio", payload: nil },
-    { key: "fotografia01", category: "Galleria", kind: "image", payload: nil },
-    { key: "Blocky", category: "Galleria", kind: "image", payload: nil },
+    { key: "fotografia01", category: "Galleria", kind: "image", payload: "/media/img/fotografia01.png" },
+    { key: "Blocky", category: "Galleria", kind: "image", payload: "/media/img/blocky.png" },
     { key: "QRVendetta", category: "Galleria", kind: "image", payload: nil },
     { key: "Credits", category: "Galleria", kind: "image", payload: nil },
 
