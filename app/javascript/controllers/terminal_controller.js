@@ -302,19 +302,43 @@ export default class extends Controller {
     }
   }
 
+  formatTextToHtml(text) {
+    if (text == null) return ""
+
+    // 1) Escape HTML (sicurezza: niente tag eseguibili)
+    const tmp = document.createElement("div")
+    tmp.textContent = String(text)
+    let safe = tmp.innerHTML
+
+    // 2) Markdown minimo: **grassetto**
+    safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+
+    return safe
+  }
+
+
   printLine(text) {
     const line = document.createElement("div")
     line.className = "line"
+
+    text = String(text ?? "")
 
     if (text.startsWith("\u0000")) {
       line.classList.add("no-prompt")
       text = text.slice(1)
     }
 
-    line.textContent = text
+    // Se contiene **...** allora usa HTML formattato, altrimenti testo normale
+    if (text.includes("**")) {
+      line.innerHTML = this.formatTextToHtml(text)
+    } else {
+      line.textContent = text
+    }
+
     this.screenTarget.appendChild(line)
     this.screenTarget.scrollTop = this.screenTarget.scrollHeight
   }
+
 
   printLines(lines) {
     for (const line of lines) this.printLine(line)

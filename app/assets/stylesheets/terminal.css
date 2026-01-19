@@ -47,6 +47,11 @@
         padding-left: 0;
     }
 
+    .line strong {
+        font-weight: 700;
+    }
+
+
     /* Barra in basso di input */
     #inputbar {
         display: flex;                  /* simbolo e input sulla stessa riga */
