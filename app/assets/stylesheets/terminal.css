@@ -43,10 +43,6 @@
         content: "";
     }
 
-    .line.no-prompt {
-        padding-left: 0;
-    }
-
     .line strong {
         font-weight: 700;
     }

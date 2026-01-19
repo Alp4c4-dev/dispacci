@@ -22,6 +22,20 @@ export default class extends Controller {
     this.timerWarningCount = 0
     this.timerLineEl = null
 
+    // Typewriter effect
+    this.isPrinting = false
+    this.skipPrinting = false
+    this.printQueue = Promise.resolve()
+
+    this.onSkipKeyDown = (e) => {
+      if (!this.isPrinting) return
+      if (e.key === " " || e.key === "Enter") {
+        this.skipPrinting = true
+      }
+    }
+
+    document.addEventListener("keydown", this.onSkipKeyDown)
+
     // UX
     this.setupCodeDigits()
     this.loginUsernameTarget.focus()
@@ -38,6 +52,7 @@ export default class extends Controller {
 
   disconnect() {
     document.removeEventListener("keydown", this.onGlobalKeyDown)
+    document.removeEventListener("keydown", this.onSkipKeyDown)
   }
 
   backToLogin() {
@@ -311,16 +326,95 @@ export default class extends Controller {
     let safe = tmp.innerHTML
 
     // 2) Markdown minimo: **grassetto**
-    safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    safe = safe.replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>")
 
     return safe
+  }
+
+  normalizePayloadText(text) {
+    // converte i "\n" letterali (backslash+n) in newline reali
+    return String(text ?? "").replace(/\\n/g, "\n")
+  }
+
+  splitIntoTerminalLines(text) {
+    // mantiene righe vuote (importante per \n\n)
+    return this.normalizePayloadText(text).split("\n")
+  }
+
+  setLineContent(lineEl, text) {
+    const raw = this.normalizePayloadText(text)
+
+    // markdown minimo + sicurezza HTML
+    lineEl.innerHTML = this.formatTextToHtml(raw)
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  enqueuePrint(fn) {
+    this.printQueue = this.printQueue.then(fn).catch((err) => {
+      console.error("Errore nella coda di stampa:", err)
+    })
+    return this.printQueue
+  }
+
+  async printLineTypewriter(text, { charDelay = 10 } = {}) {
+    const line = document.createElement("div")
+    line.className = "line"
+
+    text = this.normalizePayloadText(text)
+
+    if (text.startsWith("\u0000")) {
+      line.classList.add("no-prompt")
+      text = text.slice(1)
+    }
+
+    this.screenTarget.appendChild(line)
+    this.screenTarget.scrollTop = this.screenTarget.scrollHeight
+
+    // se l’utente ha skippato: stampa subito MA renderizzando markdown
+    if (this.skipPrinting) {
+      this.setLineContent(line, text)
+      return
+    }
+
+    for (let i = 1; i <= text.length; i++) {
+      if (this.skipPrinting) {
+        this.setLineContent(line, text)
+        return
+      }
+      line.textContent = text.slice(0, i)
+      this.screenTarget.scrollTop = this.screenTarget.scrollHeight
+      await this.sleep(charDelay)
+    }
+
+    // a fine typing: applica sempre il rendering (**bold**)
+    this.setLineContent(line, text)
+  }
+
+  async printLinesTypewriter(lines, { lineDelay = 140, charDelay = 10 } = {}) {
+    this.isPrinting = true
+    this.skipPrinting = false
+
+    try {
+      for (const line of (lines || [])) {
+        await this.printLineTypewriter(line, { charDelay })
+        if (!this.skipPrinting) {
+          await this.sleep(lineDelay)
+        }
+      }
+    } finally {
+      this.isPrinting = false
+      this.skipPrinting = false
+    }
   }
 
   printLine(text) {
     const line = document.createElement("div")
     line.className = "line"
 
-    text = String(text ?? "")
+    text = this.normalizePayloadText(text)
 
     if (text.startsWith("\u0000")) {
       line.classList.add("no-prompt")
@@ -392,6 +486,41 @@ export default class extends Controller {
     }
 
     this.screenTarget.appendChild(line)
+  }
+
+  async printItemsTypewriter(items, { lineDelay = 140, charDelay = 10 } = {}) {
+    this.isPrinting = true
+    this.skipPrinting = false
+
+    try {
+      for (const item of (items || [])) {
+        if (!item || !item.type) continue
+
+        if (item.type === "text") {
+          const lines = this.splitIntoTerminalLines(item.text ?? "")
+
+          for (let i = 0; i < lines.length; i++) {
+            const l = lines[i]
+
+            // Solo la prima riga mostra il prompt.
+            // Le righe successive (e le righe vuote) diventano "no-prompt".
+            const isFirstVisible = (i === 0 && l !== "")
+            const printable = isFirstVisible ? l : `\u0000${l === "" ? " " : l}`
+
+            await this.printLineTypewriter(printable, { charDelay })
+            if (!this.skipPrinting) await this.sleep(lineDelay)
+          }
+
+        } else {
+          // media: render immediato (niente typewriter)
+          this.renderItem(item)
+          if (!this.skipPrinting) await this.sleep(lineDelay)
+        }
+      }
+    } finally {
+      this.isPrinting = false
+      this.skipPrinting = false
+    }
   }
 
 
@@ -512,26 +641,51 @@ export default class extends Controller {
   // -----------------------------
   // Comandi
   // -----------------------------
+  
+  extractTextLines(data) {
+    // Preferisci items se presenti (nuovo formato)
+    if (data && Array.isArray(data.items)) {
+      return data.items
+        .filter(it => it && it.type === "text")
+        .map(it => String(it.text ?? ""))
+    }
+
+    // Fallback al vecchio formato lines
+    if (data && Array.isArray(data.lines)) {
+      return data.lines.map(t => String(t ?? ""))
+    }
+
+    return []
+  }
+
   async handleCommand(raw) {
+    // ------------------------------------------------------------
+    // 0) Normalizza input
+    // ------------------------------------------------------------
     const input = raw.trim()
     if (!input) return
 
-    // Se stiamo aspettando una definizione, il prossimo input NON è un comando.
-    // Lo salviamo su DB e non stampiamo "/"
+    // ------------------------------------------------------------
+    // 1) MODALITÀ "AWAITING" (es. definizione dopo "solitudine")
+    //    In questa modalità, il prossimo input NON è un comando.
+    //    Lo salviamo su DB e NON stampiamo "/".
+    // ------------------------------------------------------------
     if (this.awaiting && this.awaiting.kind === "definition") {
       const definition = input
 
       // Mostra a schermo quello che l'utente ha scritto (senza "/")
       this.printLine(definition)
 
+      // Salva la definizione sul server
       const { ok, data } = await this.postJSON("/definitions", {
         word: this.awaiting.word,
         definition
       })
 
+      // Gestione esito
       if (ok && data && data.ok) {
         const name = this.currentUser?.username || "Ribelle"
-        this.printLine("Grazie " + name + "! Messaggio ricevuto. Adesso tocca a noi diffonderlo.")
+        this.printLine("Grazie " + name + "! Messaggio ricevuto. Adesso tocca a noi diffonderlo")
       } else if (!ok && data && data.error === "Non autenticato") {
         this.printLine("Sessione scaduta. Torno al login.")
         this.resetToLogin()
@@ -540,39 +694,63 @@ export default class extends Controller {
         this.printLine("Errore: " + (data?.error || "impossibile salvare"))
       }
 
+      // Esci dalla modalità awaiting e torna al prompt
       this.awaiting = null
       this.printReadyPrompt()
       return
     }
 
+    // ------------------------------------------------------------
+    // 2) ECO A SCHERMO DEL COMANDO (normale modalità terminale)
+    // ------------------------------------------------------------
     this.printLine("/" + input)
 
-    // client-side
+    // ------------------------------------------------------------
+    // 3) COMANDI CLIENT-SIDE (non richiedono /commands)
+    // ------------------------------------------------------------
+
+    // Logout: chiama /logout e torna al login comunque
     if (input === "logout") {
-      const { ok } = await this.deleteJSON("/logout")
-      // Anche se il server risponde male, lato UX torna al login comunque
+      await this.deleteJSON("/logout")
       this.resetToLogin()
       return
     }
 
+    // ------------------------------------------------------------
+    // 4) TIMER: gestione dedicata (ha regole speciali)
+    // ------------------------------------------------------------
+
+    // "timer" -> chiedi al server eventuali linee, poi avvia timer front-end
     if (input === "timer") {
       const { ok, data } = await this.postJSON("/commands", { command: "timer" })
 
-      if (ok && data.ok && Array.isArray(data.lines)) {
-        this.printLines(data.lines)
-      } else if (!ok && data && data.error === "Non autenticato") {
+      if (!ok && data && data.error === "Non autenticato") {
         this.printLine("Sessione scaduta. Torno al login.")
         this.resetToLogin()
         return
-      } else {
+      }
+      if (!ok || !data || !data.ok) {
         this.printLine("Errore nel server.")
         return
       }
 
+      // Stampa eventuali linee del server (typewriter)
+      const lines = this.extractTextLines(data)
+      if (lines.length > 0) {
+        await this.enqueuePrint(async () => {
+          await this.printLinesTypewriter(lines, { 
+            charDelay: 10, 
+            lineDelay: 140 
+          })
+        })
+      }
+
+      // Avvia il timer UI
       this.startTimer()
       return
     }
 
+    // "stop" -> notifica il server e poi chiudi timer e salva donazione
     if (input === "stop") {
       const { ok, data } = await this.postJSON("/commands", { command: "stop" })
 
@@ -581,21 +759,30 @@ export default class extends Controller {
         this.resetToLogin()
         return
       }
-
-      if (!ok) {
+      if (!ok || !data || !data.ok) {
         this.printLine("Errore nel server.")
         return
       }
 
-      // se il server restituisce lines non vuote, stampale (qui saranno vuote)
-      if (data && data.ok && Array.isArray(data.lines) && data.lines.length > 0) {
-        this.printLines(data.lines)
+      // Se il server restituisce linee extra, stampale (typewriter)
+      const lines = this.extractTextLines(data)
+      if (lines.length > 0) {
+        await this.enqueuePrint(async () => {
+          await this.printLinesTypewriter(lines, { 
+            charDelay: 10, 
+            lineDelay: 140 
+          })
+        })
       }
 
+      // Ferma timer + salva donazione
       await this.stopTimer()
       return
     }
 
+    // Se il timer è attivo e l'utente digita QUALSIASI altra cosa:
+    //  - prima volta: warning
+    //  - seconda volta: annulla timer
     if (this.timerActive) {
       this.timerWarningCount++
       if (this.timerWarningCount === 1) {
@@ -607,15 +794,28 @@ export default class extends Controller {
       return
     }
 
-    // server-side
+    // ------------------------------------------------------------
+    // 5) COMANDI SERVER-SIDE GENERICI (/commands)
+    // ------------------------------------------------------------
     const { ok, data } = await this.postJSON("/commands", { command: input })
 
-    if (ok && data.ok) {
-      if (Array.isArray(data.items)) {
-        this.renderItems(data.items)
-      } else if (Array.isArray(data.lines)) {
-        this.printLines(data.lines) // fallback per utility/categorie
-      }
+    // Non autenticato: comportamento coerente ovunque
+    if (!ok && data && data.error === "Non autenticato") {
+      this.printLine("Sessione scaduta. Torno al login.")
+      this.resetToLogin()
+      return
+    }
+
+    // Se risposta ok: stampa (typewriter) e gestisci eventuale awaiting
+    if (ok && data && data.ok) {
+      await this.enqueuePrint(async () => {
+        if (Array.isArray(data.items) && data.items.length > 0) {
+          await this.printItemsTypewriter(data.items, { charDelay: 10, lineDelay: 140 })
+        } else {
+          const lines = this.extractTextLines(data)
+          await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 })
+        }
+      })
 
       if (data.awaiting) {
         this.awaiting = data.awaiting
@@ -626,12 +826,8 @@ export default class extends Controller {
       return
     }
 
-    if (!ok && data && data.error === "Non autenticato") {
-      this.printLine("Sessione scaduta. Torno al login.")
-      this.resetToLogin()
-      return
-    }
 
+    // Fallback errore generico
     this.printLine("Errore nel server: " + (data?.error || "500"))
   }
 
