@@ -179,7 +179,7 @@ export default class extends Controller {
   }
 
   // -----------------------------
-  // UX 4-digit code
+  // UX 5-digit code
   // -----------------------------
   setupCodeDigits() {
     this.codeDigitTargets.forEach((input, index) => {
@@ -258,7 +258,7 @@ export default class extends Controller {
       return
     }
 
-    const chars = this.codeDigitTargets.map(input => (input.value || "").trim())
+    const chars = this.codeDigitTargets.map(input => (input.value || "").trim().toUpperCase())
 
     if (chars.some(c => c === "")) {
       this.codeErrorTarget.textContent = "Inserire il codice"
@@ -267,7 +267,7 @@ export default class extends Controller {
 
     const code = chars.join("")
 
-    if (!/^[A-Za-z]{5}$/.test(code)) {
+    if (!/^[A-Z]{5}$/.test(code)) {
       this.codeErrorTarget.textContent = "Inserire 5 lettere"
       return
     }
@@ -343,6 +343,11 @@ export default class extends Controller {
 
   setLineContent(lineEl, text) {
     const raw = this.normalizePayloadText(text)
+
+    if (raw.trim() === "") {
+      lineEl.innerHTML = "&nbsp;"
+      return
+    }
 
     // markdown minimo + sicurezza HTML
     lineEl.innerHTML = this.formatTextToHtml(raw)
@@ -432,6 +437,14 @@ export default class extends Controller {
     this.screenTarget.scrollTop = this.screenTarget.scrollHeight
   }
 
+  printSpacerLine() {
+    const line = document.createElement("div")
+    line.className = "line no-prompt"
+    line.innerHTML = "&nbsp;" // garantisce altezza visibile
+    this.screenTarget.appendChild(line)
+    this.screenTarget.scrollTop = this.screenTarget.scrollHeight
+  }
+
   printLines(lines) {
     for (const line of lines) this.printLine(line)
   }
@@ -484,6 +497,23 @@ export default class extends Controller {
     } else {
       line.textContent = "(tipo contenuto sconosciuto)"
     }
+
+    if (item.type === "link") {
+      const line = document.createElement("div")
+      line.className = "line no-prompt"
+
+      const a = document.createElement("a")
+      a.href = item.url
+      a.textContent = item.text || item.url
+      a.target = "_blank"
+      a.rel = "noopener"
+
+      line.appendChild(a)
+      this.screenTarget.appendChild(line)
+      this.screenTarget.scrollTop = this.screenTarget.scrollHeight
+      return
+    }
+
 
     this.screenTarget.appendChild(line)
   }
@@ -742,6 +772,7 @@ export default class extends Controller {
             charDelay: 10, 
             lineDelay: 140 
           })
+          this.printSpacerLine()
         })
       }
 
@@ -772,6 +803,7 @@ export default class extends Controller {
             charDelay: 10, 
             lineDelay: 140 
           })
+          this.printSpacerLine()
         })
       }
 
@@ -789,6 +821,7 @@ export default class extends Controller {
         this.printLine("Attenzione. Timer attivo. Digita 'stop' per fermarlo.")
       } else {
         this.cancelTimer()
+        this.printSpacerLine()
         this.printReadyPrompt()
       }
       return
@@ -815,6 +848,7 @@ export default class extends Controller {
           const lines = this.extractTextLines(data)
           await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 })
         }
+        this.printSpacerLine()
       })
 
       if (data.awaiting) {

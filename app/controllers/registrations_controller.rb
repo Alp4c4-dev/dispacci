@@ -1,10 +1,10 @@
 class RegistrationsController < ApplicationController
-  FIXED_CODE = "Testa"
+  FIXED_CODE = "TESTA"
 
   def create
     username = params[:username].to_s.strip
     password = params[:password].to_s
-    code     = params[:code].to_s.strip
+    code     = params[:code].to_s.strip.upcase
 
     if code != FIXED_CODE
       return render json: { ok: false, error: "Codice non valido" }, status: :unprocessable_entity

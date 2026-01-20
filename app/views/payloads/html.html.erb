@@ -1,0 +1,30 @@
+<div style="max-width: 1000px; margin: 24px auto; padding: 0 16px;">
+  <h1 style="margin: 0 0 12px;"><%= @title %></h1>
+
+  <button id="copy-btn" type="button" style="margin-bottom: 12px; padding: 8px 12px; cursor: pointer;">
+    Copia
+  </button>
+  <span id="copy-status" style="margin-left: 8px;"></span>
+
+  <pre style="white-space: pre; overflow: auto; background: #0b1220; color: #e6eef6; padding: 16px; border-radius: 10px;">
+<code id="code"><%= h(@code) %></code>
+  </pre>
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById("copy-btn");
+    const status = document.getElementById("copy-status");
+    const codeEl = document.getElementById("code");
+
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent);
+        status.textContent = "Copiato!";
+        setTimeout(() => (status.textContent = ""), 1200);
+      } catch (e) {
+        status.textContent = "Impossibile copiare (permessi browser).";
+      }
+    });
+  })();
+</script>

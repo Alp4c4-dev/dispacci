@@ -4,7 +4,6 @@ class CommandsController < ApplicationController
   before_action :require_login!
 
   CATEGORY_COMMANDS = %w[Dossier Galleria Armeria].freeze
-  UTILITY_COMMANDS  = %w[help whoami ping total totale stop].freeze
   DEFINITION_KEYWORDS = %w[solitudine].freeze
 
   def create
@@ -12,9 +11,9 @@ class CommandsController < ApplicationController
 
     result =
       if cmd.empty?
-        { lines: ["(vuoto)"] }
+        { lines: [ "(vuoto)" ] }
       else
-        dispatch_command(cmd) 
+        dispatch_command(cmd)
       end
 
     render json: { ok: true }.merge(result)
@@ -23,36 +22,41 @@ class CommandsController < ApplicationController
   private
 
   def dispatch_command(cmd)
+    cmd_norm = cmd.downcase
+
     # 1) Utility commands
     utility_lines = handle_utility_command(cmd)
     return { lines: utility_lines } if utility_lines
 
     # 2) Categoria
-    if CATEGORY_COMMANDS.include?(cmd)
-      return { lines: category_listing_lines(cmd) }
+    category = CATEGORY_COMMANDS.find { |c| c.downcase == cmd_norm }
+    if category
+      return { lines: category_listing_lines(category) }
     end
 
     # 3) Keyword unlockable
-    unlockable = Unlockable.find_by(key: cmd)
+    unlockable = Unlockable.where("LOWER(key) = ?", cmd_norm).first
     if unlockable
       result = unlockable_lines_for(unlockable)
 
       # Se è una keyword “definizione”, dopo aver stampato le righe
       # chiediamo al frontend di aspettare la risposta dell'utente
-      if DEFINITION_KEYWORDS.include?(cmd)
-        result[:awaiting] = { kind: "definition", word: cmd }
+      if DEFINITION_KEYWORDS.any? { |w| w.downcase == cmd_norm }
+        result[:awaiting] = { kind: "definition", word: cmd_norm }
       end
 
       return result
     end
 
     # 4) Unknown
-    { lines: ["Comando non riconosciuto: #{cmd}"] }
+    { lines: [ "Comando non riconosciuto: #{cmd}" ] }
   end
 
 
   def handle_utility_command(cmd)
-    case cmd
+    cmd_norm = cmd.downcase
+
+    case cmd_norm
     when "help"
       [
         "Comandi di supporto:",
@@ -82,6 +86,16 @@ class CommandsController < ApplicationController
     unlocked_ids = current_user.user_unlocks.pluck(:unlockable_id).to_set
 
     lines = []
+
+    case category_cmd
+    when "Dossier"
+      lines << "Nel Dossier trovi i file con le informazioni sul nostro mondo e sui nostri nemici. Torna qui  quando hai bisogno di orientarti in questo grigio presente."
+    when "Galleria"
+      lines << "Nella Galleria trovi le testimonianze di altri ribelli. Siamo tantə: non sei solo, non sei sola."
+    when "Armeria"
+      lines << "Nell'Armeria trovi i nostri pochi ma potenti strumenti di resistenza. Fai la tua parte, combatti."
+    end
+
     lines << "Voci sbloccate:"
 
     if unlockables.empty?
@@ -184,24 +198,33 @@ class CommandsController < ApplicationController
 
     case kind
     when "text", "command"
-      payload
+      parts = payload
         .split("[[NEXT]]")
         .map(&:strip)
         .reject(&:blank?)
-        .map { |part| { type: "text", text: part } }
+
+      if unlockable.key.to_s.downcase == "html" && parts.length > 1
+        first = parts.first
+        return [
+          { type: "text", text: first },
+          { type: "link", text: "Apri codice HTML (pagina dedicata)", url: Rails.application.routes.url_helpers.html_payload_path(unlockable.id) }
+        ]
+      end
+
+    parts.map { |part| { type: "text", text: part } }
+
 
     when "image"
-      [{ type: "image", url: payload }]
+      [ { type: "image", url: payload } ]
 
     when "audio"
-      [{ type: "audio", url: payload }]
+      [ { type: "audio", url: payload } ]
 
     when "video"
-      [{ type: "video", url: payload }]
+      [ { type: "video", url: payload } ]
 
     else
       []
     end
   end
-
 end
