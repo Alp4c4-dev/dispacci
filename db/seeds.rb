@@ -11,19 +11,21 @@ Unlockable.upsert_all(
     # ----------------
     # Dossier
     # ----------------
+    { key: "1994", category: "Dossier", kind: "text", payload: payload_for.call("1994.txt")},
+    { key: "1997", category: "Dossier", kind: "text", payload: nil},
     { key: "2001", category: "Dossier", kind: "text", payload: payload_for.call("2001.txt") },
     { key: "T-Corp", category: "Dossier", kind: "text", payload: payload_for.call("T-Corp.txt") },
     { key: "2522", category: "Dossier", kind: "text", payload: payload_for.call("2522.txt") },
-    { key: "GrandeNuvola", category: "Dossier", kind: "text", payload: nil },
-    { key: "KemmigEdition", category: "Dossier", kind: "image", payload: "/media/img/kemmigedition.png" },
+    { key: "GrandeNuvola", category: "Dossier", kind: "text", payload: payload_for.call("GrandeNuvola.txt") },
+    { key: "KemmigEdition", category: "Dossier", kind: "image", payload: "/media/img/kemmigedition.webp" },
 
     # ----------------
     # Galleria
     # ----------------
-    { key: "crescente", category: "Galleria", kind: "image", payload: "/media/img/crescente.png" },
-    { key: "audiocompleto", category: "Galleria", kind: "audio", payload: nil },
-    { key: "fotografia01", category: "Galleria", kind: "image", payload: "/media/img/fotografia01.png" },
-    { key: "Blocky", category: "Galleria", kind: "image", payload: "/media/img/blocky.png" },
+    { key: "crescente", category: "Galleria", kind: "image", payload: "/media/img/crescente.webp" },
+    { key: "audiocompleto", category: "Galleria", kind: "audio", payload: "/media/audio/audiov3.mp3" },
+    { key: "fotografia01", category: "Galleria", kind: "image", payload: "/media/img/fotografia01.webp" },
+    { key: "Blocky", category: "Galleria", kind: "image", payload: "/media/img/blocky.webp" },
     { key: "QRVendetta", category: "Galleria", kind: "image", payload: nil },
     { key: "Credits", category: "Galleria", kind: "image", payload: nil },
 
