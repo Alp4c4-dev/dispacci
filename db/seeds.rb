@@ -34,7 +34,7 @@ Unlockable.upsert_all(
     # ----------------
     { key: "timer", category: "Armeria", kind: "command", payload: nil },
     { key: "solitudine", category: "Armeria", kind: "command", payload: payload_for.call("solitudine.txt") },
-    { key: "Aurelius", category: "Armeria", kind: "command", payload: nil },
+    { key: "Aurelius", category: "Armeria", kind: "command", payload: payload_for.call("Aurelius.txt") },
     { key: "html", category: "Armeria", kind: "text", payload: payload_for.call("html.txt") }
   ],
   unique_by: :key

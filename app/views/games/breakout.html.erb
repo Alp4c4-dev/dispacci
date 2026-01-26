@@ -1,0 +1,299 @@
+<div style="max-width: 1100px; margin: 16px auto; padding: 0 12px; font-family: monospace;">
+  <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+    <h1 style="margin: 8px 0;"><%= @title %></h1>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <a href="/" style="text-decoration:none;">← Torna al terminale</a>
+      <button id="btn-restart" type="button">Restart</button>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom: 8px;">
+    <div>Score: <span id="ui-score">0</span></div>
+    <div>Lives: <span id="ui-lives">3</span></div>
+    <div id="ui-status"></div>
+  </div>
+
+  <canvas id="game" width="900" height="540"
+    style="width: 100%; max-width: 1000px; aspect-ratio: 5/3; background:#0b1220; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); touch-action: none;">
+  </canvas>
+
+  <p style="opacity:0.85; margin-top:10px;">
+    Controlli: mouse / touch per muovere la barra. Spazio per avviare (desktop).
+  </p>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const uiScore = document.getElementById("ui-score");
+  const uiLives = document.getElementById("ui-lives");
+  const uiStatus = document.getElementById("ui-status");
+  const btnRestart = document.getElementById("btn-restart");
+
+  const W = () => canvas.width;
+  const H = () => canvas.height;
+
+  // ----- CSRF helper (Rails) -----
+  function csrfToken() {
+    return document.querySelector("meta[name='csrf-token']")?.content || "";
+  }
+
+  async function saveScore(score, startedAtIso) {
+    try {
+      const res = await fetch("/game_sessions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-CSRF-Token": csrfToken()
+        },
+        body: JSON.stringify({ game_key: "breakout", score, started_at: startedAtIso })
+      });
+      const data = await res.json().catch(() => ({}));
+      return (res.ok && data.ok) ? { ok: true } : { ok: false, error: data.error || "Errore" };
+    } catch (e) {
+      return { ok: false, error: "Network error" };
+    }
+  }
+
+  // ----- Game state -----
+  let startedAtIso = null;
+  let running = false;
+  let gameOver = false;
+  let won = false;
+
+  const state = {
+    score: 0,
+    lives: 3,
+    paddle: { w: 140, h: 14, x: 0, y: 0, speed: 0 },
+    ball: { x: 0, y: 0, vx: 260, vy: -260, r: 8 },
+    bricks: [],
+    brick: { rows: 6, cols: 10, w: 0, h: 20, pad: 10, top: 70, left: 30 }
+  };
+
+  function resetBricks() {
+    const bw = (W() - state.brick.left * 2 - state.brick.pad * (state.brick.cols - 1)) / state.brick.cols;
+    state.brick.w = bw;
+
+    state.bricks = [];
+    for (let r = 0; r < state.brick.rows; r++) {
+      for (let c = 0; c < state.brick.cols; c++) {
+        state.bricks.push({
+          x: state.brick.left + c * (bw + state.brick.pad),
+          y: state.brick.top + r * (state.brick.h + state.brick.pad),
+          w: bw,
+          h: state.brick.h,
+          alive: true
+        });
+      }
+    }
+  }
+
+  function resetBallAndPaddle() {
+    state.paddle.x = (W() - state.paddle.w) / 2;
+    state.paddle.y = H() - 50;
+
+    state.ball.x = W() / 2;
+    state.ball.y = state.paddle.y - state.ball.r - 2;
+
+    // velocità iniziale “bella”
+    state.ball.vx = 240;
+    state.ball.vy = -260;
+  }
+
+  function resetAll() {
+    state.score = 0;
+    state.lives = 3;
+    uiScore.textContent = "0";
+    uiLives.textContent = "3";
+    uiStatus.textContent = "";
+    running = false;
+    gameOver = false;
+    won = false;
+    startedAtIso = null;
+    resetBricks();
+    resetBallAndPaddle();
+    draw(); // disegna stato iniziale
+  }
+
+  // ----- Input: mouse/touch -> paddle -----
+  function setPaddleFromClientX(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (clientX - rect.left) * (canvas.width / rect.width);
+    state.paddle.x = Math.max(0, Math.min(W() - state.paddle.w, x - state.paddle.w / 2));
+  }
+
+  canvas.addEventListener("mousemove", (e) => setPaddleFromClientX(e.clientX));
+  canvas.addEventListener("touchstart", (e) => {
+    if (e.touches?.[0]) setPaddleFromClientX(e.touches[0].clientX);
+  }, { passive: true });
+  canvas.addEventListener("touchmove", (e) => {
+    if (e.touches?.[0]) setPaddleFromClientX(e.touches[0].clientX);
+  }, { passive: true });
+
+  // Start (space)
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space") {
+      if (!running && !gameOver && !won) start();
+    }
+  });
+
+  btnRestart.addEventListener("click", () => resetAll());
+
+  function start() {
+    running = true;
+    if (!startedAtIso) startedAtIso = new Date().toISOString();
+    uiStatus.textContent = "RUN";
+  }
+
+  // ----- Collision helpers -----
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function circleRectCollide(cx, cy, r, rx, ry, rw, rh) {
+    const closestX = clamp(cx, rx, rx + rw);
+    const closestY = clamp(cy, ry, ry + rh);
+    const dx = cx - closestX;
+    const dy = cy - closestY;
+    return (dx * dx + dy * dy) <= (r * r);
+  }
+
+  // ----- Update -----
+  let last = performance.now();
+
+  function step(now) {
+    const dt = Math.min(0.02, (now - last) / 1000);
+    last = now;
+
+    if (running && !gameOver && !won) {
+      update(dt);
+    }
+
+    draw();
+    requestAnimationFrame(step);
+  }
+
+  function update(dt) {
+    // move ball
+    state.ball.x += state.ball.vx * dt;
+    state.ball.y += state.ball.vy * dt;
+
+    // walls
+    if (state.ball.x - state.ball.r <= 0) { state.ball.x = state.ball.r; state.ball.vx *= -1; }
+    if (state.ball.x + state.ball.r >= W()) { state.ball.x = W() - state.ball.r; state.ball.vx *= -1; }
+    if (state.ball.y - state.ball.r <= 0) { state.ball.y = state.ball.r; state.ball.vy *= -1; }
+
+    // bottom -> lose life
+    if (state.ball.y - state.ball.r > H()) {
+      state.lives -= 1;
+      uiLives.textContent = String(state.lives);
+      running = false;
+      uiStatus.textContent = "PAUSE";
+
+      if (state.lives <= 0) {
+        endGame(false);
+        return;
+      }
+
+      resetBallAndPaddle();
+      return;
+    }
+
+    // paddle collision
+    const p = state.paddle;
+    if (circleRectCollide(state.ball.x, state.ball.y, state.ball.r, p.x, p.y, p.w, p.h) && state.ball.vy > 0) {
+      const hit = (state.ball.x - (p.x + p.w / 2)) / (p.w / 2); // -1..1
+      const speed = Math.sqrt(state.ball.vx * state.ball.vx + state.ball.vy * state.ball.vy);
+      const maxAngle = Math.PI * 0.35; // ~63°
+      const angle = hit * maxAngle;
+
+      state.ball.vx = speed * Math.sin(angle);
+      state.ball.vy = -Math.abs(speed * Math.cos(angle));
+
+      state.ball.y = p.y - state.ball.r - 1;
+    }
+
+    // bricks collision
+    let aliveCount = 0;
+    for (const b of state.bricks) {
+      if (!b.alive) continue;
+      aliveCount++;
+
+      if (circleRectCollide(state.ball.x, state.ball.y, state.ball.r, b.x, b.y, b.w, b.h)) {
+        b.alive = false;
+        state.score += 10;
+        uiScore.textContent = String(state.score);
+
+        // rimbalzo semplice: inverti vy, e se ball è più “a lato” inverti vx
+        const bx = b.x + b.w / 2;
+        const by = b.y + b.h / 2;
+        const dx = state.ball.x - bx;
+        const dy = state.ball.y - by;
+
+        if (Math.abs(dx) > Math.abs(dy)) state.ball.vx *= -1;
+        else state.ball.vy *= -1;
+
+        break; // un solo brick per frame
+      }
+    }
+
+    if (aliveCount === 0) {
+      endGame(true);
+    }
+  }
+
+  async function endGame(isWin) {
+    running = false;
+    gameOver = !isWin;
+    won = isWin;
+    uiStatus.textContent = isWin ? "WIN" : "GAME OVER";
+
+    const res = await saveScore(state.score, startedAtIso);
+    if (!res.ok) {
+      uiStatus.textContent += " (score NON salvato)";
+    }
+  }
+
+  // ----- Draw -----
+  function draw() {
+    ctx.clearRect(0, 0, W(), H());
+
+    // background grid (leggera)
+    ctx.globalAlpha = 0.12;
+    ctx.beginPath();
+    for (let x = 0; x <= W(); x += 30) { ctx.moveTo(x, 0); ctx.lineTo(x, H()); }
+    for (let y = 0; y <= H(); y += 30) { ctx.moveTo(0, y); ctx.lineTo(W(), y); }
+    ctx.strokeStyle = "#ffffff";
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // bricks
+    for (const b of state.bricks) {
+      if (!b.alive) continue;
+      ctx.fillStyle = "rgba(255,255,255,0.22)";
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+    }
+
+    // paddle
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fillRect(state.paddle.x, state.paddle.y, state.paddle.w, state.paddle.h);
+
+    // ball
+    ctx.beginPath();
+    ctx.arc(state.ball.x, state.ball.y, state.ball.r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.fill();
+
+    // overlay text when paused
+    if (!running && !gameOver && !won) {
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = "18px monospace";
+      ctx.fillText("Clicca/Touch per muovere. Premi SPAZIO per avviare.", 30, 40);
+    }
+  }
+
+  // init
+  resetAll();
+  requestAnimationFrame(step);
+})();
+</script>

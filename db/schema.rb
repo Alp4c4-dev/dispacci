@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_17_170626) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_26_131855) do
   create_table "donations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "ended_at"
@@ -19,6 +19,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_170626) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["user_id"], name: "index_donations_on_user_id"
+  end
+
+  create_table "game_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "ended_at"
+    t.string "game_key", null: false
+    t.integer "score", default: 0, null: false
+    t.datetime "started_at"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["game_key", "score"], name: "index_game_sessions_on_game_key_and_score"
+    t.index ["user_id", "game_key"], name: "index_game_sessions_on_user_id_and_game_key"
+    t.index ["user_id"], name: "index_game_sessions_on_user_id"
   end
 
   create_table "unlockables", force: :cascade do |t|
@@ -69,6 +82,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_170626) do
   end
 
   add_foreign_key "donations", "users"
+  add_foreign_key "game_sessions", "users"
   add_foreign_key "unlocked_commands", "users"
   add_foreign_key "user_unlocks", "unlockables"
   add_foreign_key "user_unlocks", "users"

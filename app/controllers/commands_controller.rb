@@ -211,6 +211,14 @@ class CommandsController < ApplicationController
         ]
       end
 
+      if unlockable.key.to_s.downcase == "aurelius"
+        first = parts.first || "Accesso concesso."
+        return [
+        { type: "text", text: first },
+        { type: "link", text: "Apri Aurelius // Breakout", url: "/games/breakout" }
+        ]
+      end
+
     parts.map { |part| { type: "text", text: part } }
 
 
