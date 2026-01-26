@@ -505,7 +505,6 @@ export default class extends Controller {
       const a = document.createElement("a")
       a.href = item.url
       a.textContent = item.text || item.url
-      a.target = "_blank"
       a.rel = "noopener"
 
       line.appendChild(a)
