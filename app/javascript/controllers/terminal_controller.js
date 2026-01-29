@@ -364,9 +364,10 @@ export default class extends Controller {
     return this.printQueue
   }
 
-  async printLineTypewriter(text, { charDelay = 10 } = {}) {
+  async printLineTypewriter(text, { charDelay = 10, extraClass = "" } = {}) {
     const line = document.createElement("div")
     line.className = "line"
+    if (extraClass) line.classList.add(extraClass)
 
     text = this.normalizePayloadText(text)
 
@@ -378,7 +379,6 @@ export default class extends Controller {
     this.screenTarget.appendChild(line)
     this.screenTarget.scrollTop = this.screenTarget.scrollHeight
 
-    // se l’utente ha skippato: stampa subito MA renderizzando markdown
     if (this.skipPrinting) {
       this.setLineContent(line, text)
       return
@@ -394,7 +394,6 @@ export default class extends Controller {
       await this.sleep(charDelay)
     }
 
-    // a fine typing: applica sempre il rendering (**bold**)
     this.setLineContent(line, text)
   }
 
@@ -536,7 +535,8 @@ export default class extends Controller {
             const isFirstVisible = (i === 0 && l !== "")
             const printable = isFirstVisible ? l : `\u0000${l === "" ? " " : l}`
 
-            await this.printLineTypewriter(printable, { charDelay })
+            const extraClass = (item.style === "payload") ? "payload-text" : ""
+            await this.printLineTypewriter(printable, { charDelay, extraClass })
             if (!this.skipPrinting) await this.sleep(lineDelay)
           }
 
@@ -618,12 +618,13 @@ export default class extends Controller {
     const seconds = totalSeconds % 60
 
     // Messaggio UI
+    const name = this.currentUser?.username || "Ribelle"
     this.printLine(
-      "Grazie per la tua donazione. Un ribelle adesso potrà godere di " +
+      "Timer interrotto correttamente.\nDonazione completata con successo.\nGrazie " + name + "! Hai donato " +
         minutes + " minut" + (minutes === 1 ? "o" : "i") +
         " e " +
         seconds + " second" + (seconds === 1 ? "o" : "i") +
-        "."
+        ", ne faremo buon uso."
     )
 
     // Persistenza su Rails

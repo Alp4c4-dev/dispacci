@@ -33,6 +33,14 @@
         position: relative;
     }
 
+    .line.payload-text {
+        color: #ffffff;      /* bianco */
+    }
+
+    .line.payload-text strong {
+        color: #ffffff;      /* anche il grassetto resta bianco */
+    }
+
     .line::before {
         content: ">";
         position: absolute;

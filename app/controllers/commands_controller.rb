@@ -203,33 +203,26 @@ class CommandsController < ApplicationController
         .map(&:strip)
         .reject(&:blank?)
 
-      if unlockable.key.to_s.downcase == "html" && parts.length > 1
-        first = parts.first
-        return [
-          { type: "text", text: first },
-          { type: "link", text: "Apri codice HTML (pagina dedicata)", url: Rails.application.routes.url_helpers.html_payload_path(unlockable.id) }
-        ]
-      end
-
+      # Caso speciale Aurelius: testo + link (testo NON payload, quindi verde)
       if unlockable.key.to_s.downcase == "aurelius"
         first = parts.first || "Accesso concesso."
         return [
-        { type: "text", text: first },
-        { type: "link", text: "Apri Aurelius // Breakout", url: "/games/breakout" }
+          { type: "text", text: first },
+          { type: "link", text: "Apri Aurelius // Breakout", url: "/games/breakout" }
         ]
       end
 
-    parts.map { |part| { type: "text", text: part } }
-
+      # ✅ Qui: SOLO i pezzi di payload vengono marcati come payload
+      parts.map { |part| { type: "text", text: part, style: "payload" } }
 
     when "image"
-      [ { type: "image", url: payload } ]
+      [{ type: "image", url: payload }]
 
     when "audio"
-      [ { type: "audio", url: payload } ]
+      [{ type: "audio", url: payload }]
 
     when "video"
-      [ { type: "video", url: payload } ]
+      [{ type: "video", url: payload }]
 
     else
       []
