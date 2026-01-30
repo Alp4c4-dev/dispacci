@@ -4,7 +4,10 @@
   <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom: 8px;">
     <div>Dati sottratti: <span id="ui-mb">0</span> MB</div>
     <div>Vite: <span id="ui-lives">3</span></div>
-    <div id="ui-status"></div>
+    <div>
+      <div id="ui-status"></div>
+      <div id="ui-countdown" style="margin-top:6px; opacity:0.85;"></div>
+    </div>
   </div>
 
   <canvas id="game" width="900" height="540"
@@ -19,6 +22,7 @@
   const uiMb = document.getElementById("ui-mb");
   const uiLives = document.getElementById("ui-lives");
   const uiStatus = document.getElementById("ui-status");
+  const uiCountdown = document.getElementById("ui-countdown");
 
   const W = () => canvas.width;
   const H = () => canvas.height;
@@ -53,7 +57,7 @@
   function startCountdownAndReturn(seconds) {
     let left = seconds;
     const tick = () => {
-      uiStatus.textContent = `Ritorno al Portale tra ${left}s...`;
+      uiCountdown.textContent = `Ritorno al Portale tra ${left}s...`;
       left -= 1;
       if (left < 0) {
         history.back(); // torna al terminale
@@ -158,7 +162,9 @@
 
     const mb = mbStolen();
     uiMb.textContent = String(mb);
-    uiStatus.textContent = `Grazie! Hai distrutto ${formatThousands(mb)} MB di dati.`;
+    uiStatus.textContent =
+      `Grazie! Hai distrutto ${formatThousands(mb)} MB di dati. ` +
+      `Può sembrare poco, ma saremo tanti e colpiremo insieme: sentiranno il colpo!`;
 
     // salva “score” come MB (o puoi salvare blocksDestroyed)
     const res = await saveScore(mb, startedAtIso);

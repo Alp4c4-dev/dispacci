@@ -4,6 +4,10 @@
   <button id="copy-btn" type="button" style="margin-bottom: 12px; padding: 8px 12px; cursor: pointer;">
     Copia
   </button>
+
+  <button id="back-btn" type="button" style="margin-bottom: 12px; padding: 8px 12px; cursor: pointer;">
+    ← Torna al terminale
+  </button>
   <span id="copy-status" style="margin-left: 8px;"></span>
 
   <pre style="white-space: pre; overflow: auto; background: #0b1220; color: #e6eef6; padding: 16px; border-radius: 10px;">
@@ -16,6 +20,7 @@
     const btn = document.getElementById("copy-btn");
     const status = document.getElementById("copy-status");
     const codeEl = document.getElementById("code");
+    const backBtn = document.getElementById("back-btn");
 
     btn.addEventListener("click", async () => {
       try {
@@ -25,6 +30,20 @@
       } catch (e) {
         status.textContent = "Impossibile copiare (permessi browser).";
       }
+    });
+
+    backBtn.addEventListener("click", () => {
+    // Se la pagina è stata aperta dal terminale, torna indietro senza ricaricare tutto
+      if (window.history.length > 1) {
+        history.back();
+      } else {
+        window.location.href = "/"; // fallback
+      }
+    });
+
+    // opzionale: ESC per tornare al terminale
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") backBtn.click();
     });
   })();
 </script>

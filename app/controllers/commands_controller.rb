@@ -207,12 +207,21 @@ class CommandsController < ApplicationController
       if unlockable.key.to_s.downcase == "aurelius"
         first = parts.first || "Accesso concesso."
         return [
-          { type: "text", text: first },
+          { type: "text", text: first, style: "payload" },
           { type: "link", text: "Apri Aurelius // Breakout", url: "/games/breakout" }
         ]
       end
 
-      # ✅ Qui: SOLO i pezzi di payload vengono marcati come payload
+      # Caso speciale HTML: testo + link alla pagina con codice (senza stampare il resto)
+      if unlockable.key.to_s.downcase == "html"
+        first = parts.first || "Codice disponibile."
+        return [
+          { type: "text", text: first, style: "payload" },
+          { type: "link", text: "Apri codice HTML", url: html_payload_path(unlockable.id) }
+        ]
+      end
+
+      # SOLO i pezzi di payload vengono marcati come payload
       parts.map { |part| { type: "text", text: part, style: "payload" } }
 
     when "image"
