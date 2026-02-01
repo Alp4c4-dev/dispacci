@@ -295,6 +295,15 @@ export default class extends Controller {
   // TERMINALE
   // -----------------------------
   showTerminal() {
+    // Se siamo tornati da una pagina (history.back) e lo schermo contiene già righe,
+    // non rifare il boot (evita doppioni).
+    if (this.screenTarget && this.screenTarget.childElementCount > 0) {
+      this.terminalShown = true
+      this.terminalTarget.style.display = "flex"
+      setTimeout(() => this.promptTarget.focus(), 20)
+      return
+    }
+
     if (this.terminalShown) return
     this.terminalShown = true
 
