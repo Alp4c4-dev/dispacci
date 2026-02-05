@@ -1,24 +1,42 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+# Dispacci – Portale
 
-Things you may want to cover:
+Portale web in **Ruby on Rails** che integra il progetto editoriale  
+*Dispacci dal fronte della resistenza*.
 
-* Ruby version
+---
 
-* System dependencies
+## Stack
 
-* Configuration
+- Ruby on Rails 8.1
+- Ruby
+- SQLite
+- ERB + Hotwire (Turbo / Stimulus)
+- Importmap
+- CSS custom
 
-* Database creation
+---
 
-* Database initialization
+## Funzionalità
 
-* How to run the test suite
+- Gestione utenti e stato di avanzamento
+- Sistema di parole chiave per sblocco contenuti
+- Contenuti narrativi caricati via seed (`.txt`)
+- Interfaccia stile terminale
+- Elementi interattivi / ludici
 
-* Services (job queues, cache servers, search engines, etc.)
+---
 
-* Deployment instructions
+## Setup locale
 
-* ...
+### Requisiti
+- Ruby
+- Bundler
+- SQLite
+
+---
+
+## Stato
+
+Progetto sperimentale in sviluppo attivo
