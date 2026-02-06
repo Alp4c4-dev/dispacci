@@ -11,8 +11,8 @@ Unlockable.upsert_all(
     # ----------------
     # Dossier
     # ----------------
-    { key: "1994", category: "Dossier", kind: "text", payload: payload_for.call("1994.txt")},
-    { key: "1997", category: "Dossier", kind: "text", payload: payload_for.call("1997.txt")},
+    { key: "1994", category: "Dossier", kind: "text", payload: payload_for.call("1994.txt") },
+    { key: "1997", category: "Dossier", kind: "text", payload: payload_for.call("1997.txt") },
     { key: "2001", category: "Dossier", kind: "text", payload: payload_for.call("2001.txt") },
     { key: "T-Corp", category: "Dossier", kind: "text", payload: payload_for.call("T-Corp.txt") },
     { key: "2522", category: "Dossier", kind: "text", payload: payload_for.call("2522.txt") },

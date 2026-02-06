@@ -8,6 +8,6 @@ class CreateWordDefinitions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :word_definitions, [:user_id, :word], unique: true
+    add_index :word_definitions, [ :user_id, :word ], unique: true
   end
 end

@@ -1,6 +1,6 @@
 class WordDefinitionsController < ApplicationController
   before_action :require_login!
-  
+
   def create
     # deve essere loggato
     unless current_user

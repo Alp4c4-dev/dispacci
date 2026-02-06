@@ -9,7 +9,7 @@ class CreateGameSessions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :game_sessions, [:user_id, :game_key]
-    add_index :game_sessions, [:game_key, :score]
+    add_index :game_sessions, [ :user_id, :game_key ]
+    add_index :game_sessions, [ :game_key, :score ]
   end
 end

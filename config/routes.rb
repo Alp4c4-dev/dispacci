@@ -26,6 +26,5 @@ Rails.application.routes.draw do
   get "/payloads/html/:id", to: "payloads#html", as: :html_payload
 
   get "/games/breakout", to: "games#breakout"
-  resources :game_sessions, only: [:create]
-
+  resources :game_sessions, only: [ :create ]
 end

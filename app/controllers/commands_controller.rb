@@ -225,13 +225,13 @@ class CommandsController < ApplicationController
       parts.map { |part| { type: "text", text: part, style: "payload" } }
 
     when "image"
-      [{ type: "image", url: payload }]
+      [ { type: "image", url: payload } ]
 
     when "audio"
-      [{ type: "audio", url: payload }]
+      [ { type: "audio", url: payload } ]
 
     when "video"
-      [{ type: "video", url: payload }]
+      [ { type: "video", url: payload } ]
 
     else
       []
