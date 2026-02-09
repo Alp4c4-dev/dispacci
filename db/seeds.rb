@@ -23,7 +23,7 @@ Unlockable.upsert_all(
     # Galleria
     # ----------------
     { key: "crescente", category: "Galleria", kind: "image", payload: "/media/img/crescente.webp" },
-    { key: "audiocompleto", category: "Galleria", kind: "audio", payload: "/media/audio/audiov3.mp3" },
+    { key: "audiocompleto", category: "Galleria", kind: "audio", payload: "/media/audio/audiocompleto.m4a" },
     { key: "fotografia01", category: "Galleria", kind: "image", payload: "/media/img/fotografia01.webp" },
     { key: "Blocky", category: "Galleria", kind: "image", payload: "/media/img/blocky.webp" },
     { key: "QRVendetta", category: "Galleria", kind: "image", payload: nil },
