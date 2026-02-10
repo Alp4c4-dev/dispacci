@@ -11,7 +11,7 @@ Portale web in **Ruby on Rails** che integra il progetto editoriale
 
 - Ruby on Rails 8.1
 - Ruby
-- SQLite
+- SQLite + PostgreSQL
 - ERB + Hotwire (Turbo / Stimulus)
 - Importmap
 - CSS custom
