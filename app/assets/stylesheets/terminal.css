@@ -25,6 +25,20 @@
         white-space: pre-wrap;  /* preserva a capo e spazi, ma può andare a capo automaticamente */
     }
 
+    #terminal #screen a {
+        color: #3dcdd5;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    #terminal #screen a:hover {
+        text-decoration: underline;
+    }
+
+    #terminal #screen a:visited {
+        color: #925bff;
+    }
+
     /* Ogni riga di testo (output) nel terminale */
     .line {
         margin: 4px 0; /* 4px sopra e sotto, 0px destra e sinistra */
