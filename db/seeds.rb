@@ -17,6 +17,7 @@ rows = [
   { key: "2522", category: "Dossier", kind: "text", payload: payload_for.call("2522.txt") },
   { key: "GrandeNuvola", category: "Dossier", kind: "text", payload: payload_for.call("GrandeNuvola.txt") },
   { key: "KemmigEdition", category: "Dossier", kind: "image", payload: "/media/img/kemmigedition.webp" },
+  { key: "scoop", category: "Dossier", kind: "text", payload: payload_for.call("scoop.txt") },
 
   # ----------------
   # Galleria
