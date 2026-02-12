@@ -66,27 +66,55 @@ class CommandsController < ApplicationController
         "- ping",
         "- whoami"
       ]
-    when "stats"
-      # richiama modello definito in user.rb
+    when "frontedellaresistenza"
+      # --- DATI UTENTE (Calcolati nel tuo nuovo user.rb) ---
       s = current_user.stats
 
-      total_global_seconds = Donation.sum(:seconds)
-      g_min = total_global_seconds / 60
-      g_sec = total_global_seconds % 60
-      global_time_string = "#{g_min} minut#{g_min == 1 ? "o" : "i"} e #{g_sec} second#{g_sec == 1 ? "o" : "i"}"
+      # --- DATI GLOBALI (Fronte della Resistenza) ---
 
+      # 1. Tempo Globale (Replichiamo la formattazione "minuti e secondi")
+      global_seconds = Donation.sum(:seconds)
+      g_min = global_seconds / 60
+      g_sec = global_seconds % 60
+      global_time_str = "#{g_min} minut#{g_min == 1 ? "o" : "i"} e #{g_sec} second#{g_sec == 1 ? "o" : "i"}"
+
+      # Target Tempo (Es. target 50.000 secondi per il volume)
+      target_seconds = 50000
+      seconds_remaining = [ target_seconds - global_seconds, 0 ].max
+
+      # 2. Definizioni
+      global_definitions = WordDefinition.count
+
+      # 3. Distruzione Dati
+      global_score = GameSession.sum(:score)
+      global_mb = (global_score / 1024.0).round(2)
+
+      # --- COSTRUZIONE OUTPUT ---
       [
-        "--- ANALISI SISTEMA UTENTE: #{current_user.username} ---",
-        "--- IL TUO CONTRIBUTO ---",
-        "- Tempo donato: #{s[:donation_time]}",
-        "- Dati distrutti: #{s[:data_destroyed]} MB",
-        "- Parole restituite: #{s[:definitions_given]}",
-        "- Codici sbloccati: #{s[:commands_unlocked]} / #{Unlockable.count}",
-        "--- STATO DELLA RESISTENZA GLOBALE ---",
-        "- Persone attive: #{User.count}",
-        "- Tempo totale accumulato: #{global_time_string}",
-        "- Definizioni nel database: #{WordDefinition.count}",
-        "- Segreti sbloccati: #{UserUnlock.count}"
+        "----FRONTE DELLA RESISTENZA----",
+        "N.Ribelli arruolati: #{User.count}",
+        "",
+        "Liberare il tempo",
+        "Totale tempo donato: #{global_time_str}",
+        "Tempo necessario per pubblicare il prossimo volume: #{seconds_remaining}''",
+        "",
+        "Riconquistare il linguaggio",
+        "Solitudine.",
+        "N.Definizioni raccolte: #{global_definitions}",
+        "",
+        "Distruggere le macchine",
+        "Blocky.",
+        "MB Distrutti: #{global_mb} MB / MB Totali: 1mld",
+        "",
+        "----LA TUA LOTTA----",
+        "",
+        "Tempo donato: #{s[:donation_time]}", # Usa la tua formattazione da user.rb
+        "Parole riconquistate: #{s[:definitions_count]}",
+        "MB Distrutti: #{s[:data_destroyed_mb]} MB",
+        "Codici sbloccati: #{s[:total_unlocked]}/#{s[:total_unlockables]}",
+        "- Dossier: #{s[:dossier][0]}/#{s[:dossier][1]}",
+        "- Galleria: #{s[:galleria][0]}/#{s[:galleria][1]}",
+        "- Armeria: #{s[:armeria][0]}/#{s[:armeria][1]}"
       ]
     when "whoami"
       [ "Sei autenticatə come #{current_user.username}." ]

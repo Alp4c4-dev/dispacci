@@ -1,4 +1,4 @@
-class DropUnlockedCommandsTable < ActiveRecord::Migration[8.1] 
+class DropUnlockedCommandsTable < ActiveRecord::Migration[8.1]
   def change
     drop_table :unlocked_commands do |t|
       # Questo blocco serve solo se un giorno volessi annullare la cancellazione (rollback)

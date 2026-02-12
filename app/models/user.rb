@@ -10,18 +10,41 @@ class User < ApplicationRecord
   validates :username, presence: true, uniqueness: true
 
   def stats
+    # Calcoli di base
+    total_seconds = donations.sum(:seconds) || 0
+    total_score = game_sessions.sum(:score) || 0
+
+    # Calcoli per categorie
+    dossier_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: "Dossier" }).count
+    dossier_total = Unlockable.where(category: "Dossier").count
+
+    galleria_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: "Galleria" }).count
+    galleria_total = Unlockable.where(category: "Galleria").count
+
+    armeria_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: "Armeria" }).count
+    armeria_total = Unlockable.where(category: "Armeria").count
+
     {
-      donation_time: format_donation_time,
-      data_destroyed: (game_sessions.sum(:score) / 1024.0).round(2), # Esempio: 1 punto = 1KB
-      definitions_given: word_definitions.count,
-      commands_unlocked: user_unlocks.count
+      # Dati formattati per la visualizzazione
+      donation_time: format_donation_time(total_seconds),
+      data_destroyed_mb: (total_score / 1024.0).round(2), # Assumendo 1 punto = 1 KB
+      definitions_count: word_definitions.count,
+
+      # Contatori totali
+      total_unlocked: user_unlocks.count,
+      total_unlockables: Unlockable.count,
+
+      # Dettagli categorie (Array [sbloccati, totali])
+      dossier: [ dossier_unlocked, dossier_total ],
+      galleria: [ galleria_unlocked, galleria_total ],
+      armeria: [ armeria_unlocked, armeria_total ]
+
     }
   end
 
   private
 
-  def format_donation_time
-    total_seconds = donations.sum(:seconds) || 0
+  def format_donation_time(total_seconds)
     minutes = total_seconds / 60
     seconds = total_seconds % 60
     "#{minutes} minut#{minutes == 1 ? "o" : "i"} e #{seconds} second#{seconds == 1 ? "o" : "i"}"
