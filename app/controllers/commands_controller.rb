@@ -61,9 +61,32 @@ class CommandsController < ApplicationController
       [
         "Comandi di supporto:",
         "- help",
+        "- stats",
         "- logout",
         "- ping",
         "- whoami"
+      ]
+    when "stats"
+      # richiama modello definito in user.rb
+      s = current_user.stats
+
+      total_global_seconds = Donation.sum(:seconds)
+      g_min = total_global_seconds / 60
+      g_sec = total_global_seconds % 60
+      global_time_string = "#{g_min} minut#{g_min == 1 ? "o" : "i"} e #{g_sec} second#{g_sec == 1 ? "o" : "i"}"
+
+      [
+        "--- ANALISI SISTEMA UTENTE: #{current_user.username} ---",
+        "--- IL TUO CONTRIBUTO ---",
+        "- Tempo donato: #{s[:donation_time]}",
+        "- Dati distrutti: #{s[:data_destroyed]} MB",
+        "- Parole restituite: #{s[:definitions_given]}",
+        "- Codici sbloccati: #{s[:commands_unlocked]} / #{Unlockable.count}",
+        "--- STATO DELLA RESISTENZA GLOBALE ---",
+        "- Persone attive: #{User.count}",
+        "- Tempo totale accumulato: #{global_time_string}",
+        "- Definizioni nel database: #{WordDefinition.count}",
+        "- Segreti sbloccati: #{UserUnlock.count}"
       ]
     when "whoami"
       [ "Sei autenticatə come #{current_user.username}." ]
