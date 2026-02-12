@@ -13,7 +13,7 @@ class User < ApplicationRecord
   def stats
     {
       donation_time: format_donation_time,
-      data_destroyed: (games.sessions.sum(score) / 1024.0).round(2), # Esempio: 1 punto = 1KB
+      data_destroyed: (game_sessions.sessions.sum(score) / 1024.0).round(2), # Esempio: 1 punto = 1KB
       definitions_given: word_definitions.count,
       commands_unlocked: unlocked_commands.count
     }

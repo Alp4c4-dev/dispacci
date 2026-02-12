@@ -94,11 +94,6 @@ class CommandsController < ApplicationController
       [ "pong" ]
     when "stop"
       []
-    when "total", "totale"
-      total = current_user.donations.sum(:seconds)
-      m = total / 60
-      s = total % 60
-      [ "Totale donato finora: #{m} minut#{m == 1 ? "o" : "i"} e #{s} second#{s == 1 ? "o" : "i"}." ]
     else
       nil
     end
