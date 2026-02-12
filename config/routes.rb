@@ -19,8 +19,6 @@ Rails.application.routes.draw do
 
   post "/donations", to: "donations#create"
 
-  post "/unlocks", to: "unlocked_commands#create"
-
   post "/definitions", to: "word_definitions#create"
 
   get "/payloads/html/:id", to: "payloads#html", as: :html_payload

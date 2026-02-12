@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_26_131855) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_12_100100) do
   create_table "donations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "ended_at"
@@ -44,15 +44,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_131855) do
     t.index ["key"], name: "index_unlockables_on_key", unique: true
   end
 
-  create_table "unlocked_commands", force: :cascade do |t|
-    t.string "command", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.integer "user_id", null: false
-    t.index ["user_id", "command"], name: "index_unlocked_commands_on_user_id_and_command", unique: true
-    t.index ["user_id"], name: "index_unlocked_commands_on_user_id"
-  end
-
   create_table "user_unlocks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "unlockable_id", null: false
@@ -83,7 +74,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_131855) do
 
   add_foreign_key "donations", "users"
   add_foreign_key "game_sessions", "users"
-  add_foreign_key "unlocked_commands", "users"
   add_foreign_key "user_unlocks", "unlockables"
   add_foreign_key "user_unlocks", "users"
   add_foreign_key "word_definitions", "users"
