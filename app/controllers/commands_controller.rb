@@ -25,7 +25,7 @@ class CommandsController < ApplicationController
     cmd_norm = cmd.downcase
 
     # 1) Utility commands
-    utility_lines = handle_utility_command(cmd)
+    utility_result = handle_utility_command(cmd)
 
     if utility_result
       return utility_result if utility_result.is_a?(Hash)
