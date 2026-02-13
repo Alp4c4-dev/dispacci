@@ -31,7 +31,7 @@ class CommandsController < ApplicationController
       return utility_result if utility_result.is_a?(Hash)
       return { lines: utility_result }
     end
-    #return { lines: utility_lines } if utility_lines
+    # return { lines: utility_lines } if utility_lines
 
     # 2) Categoria
     category = CATEGORY_COMMANDS.find { |c| c.downcase == cmd_norm }
