@@ -26,7 +26,12 @@ class CommandsController < ApplicationController
 
     # 1) Utility commands
     utility_lines = handle_utility_command(cmd)
-    return { lines: utility_lines } if utility_lines
+
+    if utility_result
+      return utility_result if utility_result.is_a?(Hash)
+      return { lines: utility_result }
+    end
+    #return { lines: utility_lines } if utility_lines
 
     # 2) Categoria
     category = CATEGORY_COMMANDS.find { |c| c.downcase == cmd_norm }
@@ -66,7 +71,7 @@ class CommandsController < ApplicationController
         "- ping",
         "- whoami"
       ]
-    when "frontedellaresistenza"
+    when "resistenza"
       # --- DATI UTENTE (Calcolati nel tuo nuovo user.rb) ---
       s = current_user.stats
 
@@ -90,7 +95,7 @@ class CommandsController < ApplicationController
       global_mb = (global_score / 1024.0).round(2)
 
       # --- COSTRUZIONE OUTPUT ---
-      [
+      raw_lines = [
         "----FRONTE DELLA RESISTENZA----",
         "N.Ribelli arruolati: #{User.count}",
         "",
@@ -116,6 +121,10 @@ class CommandsController < ApplicationController
         "- Galleria: #{s[:galleria][0]}/#{s[:galleria][1]}",
         "- Armeria: #{s[:armeria][0]}/#{s[:armeria][1]}"
       ]
+
+      {
+        items: raw_lines.map { |line| { type: "text", text: line, style: "payload" } }
+      }
     when "whoami"
       [ "Sei autenticatə come #{current_user.username}." ]
     when "ping"
