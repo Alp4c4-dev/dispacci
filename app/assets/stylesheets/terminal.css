@@ -1,12 +1,15 @@
 
-    
+
     /* Stile base per tutta la pagina */
     body {
         margin: 0;                /* togli margini di default */
         height: 100vh;            /* altezza = 100% della finestra */
+        height: 100dvh;           /* altezza dinamica per mobile */
         background-color: #000; /* sfondo nero */
         color: #0aff0a;         /* colore testo: verde tipo terminale */
+        font-size: 16px;
         font-family: monospace;   /* font stile terminale a larghezza fissa */
+        overflow: hidden;
     }
 
     /* Contenitore del terminale. Colonna: output sopra, input sotto */
@@ -14,6 +17,7 @@
         display: none;          /* NASCOSTO all'inizio, si vede solo dopo login */
         flex-direction: column; /* disposizione verticale: sopra screen, sotto input */
         height: 100vh;          /* occupa tutta l'altezza della finestra */
+        height: 100dvh;         /* Si adatta se sparisce la barra degli indirizzi */
         padding: 16px;          /* un pò di spazio interno */
         box-sizing: border-box; /* padding incluso nel calcolo dell'altezza */
     }
@@ -91,8 +95,10 @@
         background: transparent;    /* nessuno sfondo, usa il nero del body */
         border: none;               /* niente bordo del browser */
         color: #0aff0a;           /* testo verde */
-        font: inherit;              /* usa lo stesso font del body */
+        font: inherit;
         outline: none;              /* nessun contorno blu quando è attivo */
+        -webkit-appearance: none;
+        border-radius: 0;
     }
 
     /* Schermata inserimento codice */
@@ -110,6 +116,7 @@
         justify-content: center;
         background-color: #000;
         gap: 8px;
+        height: 100dvh;
     }
 
     /* Box centrale, riutilizzato da login e codice */
@@ -141,6 +148,7 @@
         color: #0aff0a;
         padding: 6px 8px;
         font: inherit;
+        outline: none;
         box-sizing: border-box;
         margin-top: 4px;
     }

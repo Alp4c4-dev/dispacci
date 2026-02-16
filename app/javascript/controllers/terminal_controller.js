@@ -663,7 +663,7 @@ export default class extends Controller {
   // -----------------------------
   // Comandi
   // -----------------------------
-  
+
   extractTextLines(data) {
     // Preferisci items se presenti (nuovo formato)
     if (data && Array.isArray(data.items)) {
@@ -760,9 +760,9 @@ export default class extends Controller {
       const lines = this.extractTextLines(data)
       if (lines.length > 0) {
         await this.enqueuePrint(async () => {
-          await this.printLinesTypewriter(lines, { 
-            charDelay: 10, 
-            lineDelay: 140 
+          await this.printLinesTypewriter(lines, {
+            charDelay: 10,
+            lineDelay: 140
           })
           this.printSpacerLine()
         })
@@ -791,9 +791,9 @@ export default class extends Controller {
       const lines = this.extractTextLines(data)
       if (lines.length > 0) {
         await this.enqueuePrint(async () => {
-          await this.printLinesTypewriter(lines, { 
-            charDelay: 10, 
-            lineDelay: 140 
+          await this.printLinesTypewriter(lines, {
+            charDelay: 10,
+            lineDelay: 140
           })
           this.printSpacerLine()
         })
