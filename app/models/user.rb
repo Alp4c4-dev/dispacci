@@ -27,7 +27,7 @@ class User < ApplicationRecord
     {
       # Dati formattati per la visualizzazione
       donation_time: format_donation_time(total_seconds),
-      data_destroyed_mb: (total_score / 1024.0).round(2), # Assumendo 1 punto = 1 KB
+      data_destroyed_mb: total_score,
       definitions_count: word_definitions.count,
 
       # Contatori totali

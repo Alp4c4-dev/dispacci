@@ -571,79 +571,52 @@ export default class extends Controller {
   }
 
   startTimer() {
-    if (this.timerActive) {
-      this.printLine("Timer già attivo. Digita 'stop' per fermarlo.")
-      return
-    }
+    // Se per assurdo venisse chiamata due volte
+    if (this.timerActive) return
 
-    this.printLine("Avvio timer di disconnessione in corso.\nATTENZIONE: utilizzare il comando 'stop' per interrompere la donazione di tempo.\nUn arresto improvviso del terminale o l'utilizzo di altre funzioni può compromettere la sicurezza della trasmissione.")
-
+    // Setup stato visuale
     this.timerActive = true
-    this.timerStartedAtIso = new Date().toISOString()
     this.timerWarningCount = 0
     this.timerStartTime = performance.now()
     this.timerLastMs = 0
-    this.timerLineEl = null
+    this.timerLineEl = null // Resetta la riga del timer per crearne una nuova
 
+    // Avvia grafica
     this.updateTimerDisplay(0)
 
     this.timerIntervalId = setInterval(() => {
       const elapsed = performance.now() - this.timerStartTime
       this.updateTimerDisplay(elapsed)
     }, 10)
+
   }
 
-  async stopTimer() {
-    if (!this.timerActive) {
-      this.printLine("Nessun timer attivo")
-      this.printReadyPrompt()
-      return
-    }
+  async stopTimer(serverSeconds) {
+    if (!this.timerActive) return
 
+    // 1. Ferma la grafica
     clearInterval(this.timerIntervalId)
     this.timerIntervalId = null
     this.timerActive = false
     this.timerWarningCount = 0
 
-    const totalSeconds = Math.floor(this.timerLastMs / 1000)
+    // 2. Prepara i dati
+    // Usiamo il valore del server, fallback a 0 se undefined
+    const totalSeconds = (typeof serverSeconds === 'number') ? serverSeconds : 0
+
     const minutes = Math.floor(totalSeconds / 60)
     const seconds = totalSeconds % 60
-
-    // Messaggio UI
     const name = this.currentUser?.username || "Ribelle"
+
+    // 3. Stampa messaggio
     this.printLine(
       "Timer interrotto correttamente.\nDonazione completata con successo.\nGrazie " + name + "! Hai donato " +
-        minutes + " minut" + (minutes === 1 ? "o" : "i") +
-        " e " +
-        seconds + " second" + (seconds === 1 ? "o" : "i") +
-        ", ne faremo buon uso."
+      minutes + " minut" + (minutes === 1 ? "o" : "i") +
+      " e " +
+      seconds + " second" + (seconds === 1 ? "o" : "i") +
+      ", ne faremo buon uso."
     )
 
-    // Persistenza su Rails
-    const startedAtIso = this.timerStartedAtIso || null
-    const endedAtIso = new Date().toISOString()
-
-    const { ok, data } = await this.postJSON("/donations", {
-      seconds: totalSeconds,
-      started_at: startedAtIso,
-      ended_at: endedAtIso
-    })
-
-    if (ok && data.ok) {
-      const total = data.total_seconds
-      const totalMin = Math.floor(total / 60)
-      const totalSec = total % 60
-      this.printLine(
-        "Totale donato finora: " +
-          totalMin + " minut" + (totalMin === 1 ? "o" : "i") +
-          " e " +
-          totalSec + " second" + (totalSec === 1 ? "o" : "i") +
-          "."
-      )
-    } else {
-      this.printLine("(Impossibile salvare la donazione: " + (data.error || "errore") + ")")
-    }
-    this.printReadyPrompt()
   }
 
   cancelTimer() {
@@ -681,17 +654,11 @@ export default class extends Controller {
   }
 
   async handleCommand(raw) {
-    // ------------------------------------------------------------
     // 0) Normalizza input
-    // ------------------------------------------------------------
     const input = raw.trim()
     if (!input) return
 
-    // ------------------------------------------------------------
-    // 1) MODALITÀ "AWAITING" (es. definizione dopo "solitudine")
-    //    In questa modalità, il prossimo input NON è un comando.
-    //    Lo salviamo su DB e NON stampiamo "/".
-    // ------------------------------------------------------------
+    // 1) Modalità "awaiting" (per definizioni)
     if (this.awaiting && this.awaiting.kind === "definition") {
       const definition = input
 
@@ -722,106 +689,34 @@ export default class extends Controller {
       return
     }
 
-    // ------------------------------------------------------------
-    // 2) ECO A SCHERMO DEL COMANDO (normale modalità terminale)
-    // ------------------------------------------------------------
+    // 2) Eco a schermo
     this.printLine("/" + input)
 
-    // ------------------------------------------------------------
-    // 3) COMANDI CLIENT-SIDE (non richiedono /commands)
-    // ------------------------------------------------------------
-
-    // Logout: chiama /logout e torna al login comunque
+    // 3) Logout
     if (input === "logout") {
       await this.deleteJSON("/logout")
       this.resetToLogin()
       return
     }
 
-    // ------------------------------------------------------------
-    // 4) TIMER: gestione dedicata (ha regole speciali)
-    // ------------------------------------------------------------
-
-    // "timer" -> chiedi al server eventuali linee, poi avvia timer front-end
-    if (input === "timer") {
-      const { ok, data } = await this.postJSON("/commands", { command: "timer" })
-
-      if (!ok && data && data.error === "Non autenticato") {
-        this.printLine("Sessione scaduta. Torno al login.")
-        this.resetToLogin()
-        return
-      }
-      if (!ok || !data || !data.ok) {
-        this.printLine("Errore nel server.")
-        return
-      }
-
-      // Stampa eventuali linee del server (typewriter)
-      const lines = this.extractTextLines(data)
-      if (lines.length > 0) {
-        await this.enqueuePrint(async () => {
-          await this.printLinesTypewriter(lines, {
-            charDelay: 10,
-            lineDelay: 140
-          })
-          this.printSpacerLine()
-        })
-      }
-
-      // Avvia il timer UI
-      this.startTimer()
-      return
-    }
-
-    // "stop" -> notifica il server e poi chiudi timer e salva donazione
-    if (input === "stop") {
-      const { ok, data } = await this.postJSON("/commands", { command: "stop" })
-
-      if (!ok && data && data.error === "Non autenticato") {
-        this.printLine("Sessione scaduta. Torno al login.")
-        this.resetToLogin()
-        return
-      }
-      if (!ok || !data || !data.ok) {
-        this.printLine("Errore nel server.")
-        return
-      }
-
-      // Se il server restituisce linee extra, stampale (typewriter)
-      const lines = this.extractTextLines(data)
-      if (lines.length > 0) {
-        await this.enqueuePrint(async () => {
-          await this.printLinesTypewriter(lines, {
-            charDelay: 10,
-            lineDelay: 140
-          })
-          this.printSpacerLine()
-        })
-      }
-
-      // Ferma timer + salva donazione
-      await this.stopTimer()
-      return
-    }
-
-    // Se il timer è attivo e l'utente digita QUALSIASI altra cosa:
-    //  - prima volta: warning
-    //  - seconda volta: annulla timer
-    if (this.timerActive) {
+    // 4) Se il timer è attivo, blocchiamo tutto TRANNE il comando "stop"
+    // Questo permette a "stop" di scendere giù e chiamare il server.
+    if (this.timerActive && input !== "stop") {
       this.timerWarningCount++
       if (this.timerWarningCount === 1) {
         this.printLine("Attenzione. Timer attivo. Digita 'stop' per fermarlo.")
+        this.printReadyPrompt() // Ristampa il prompt per permettere di riprovare
       } else {
+        // Al secondo errore, abortiamo lato client (senza salvare su server)
         this.cancelTimer()
+        this.printLine("Sessione timer abortita per attività non consentita.")
         this.printSpacerLine()
         this.printReadyPrompt()
       }
-      return
+      return // Blocca l'esecuzione qui
     }
 
-    // ------------------------------------------------------------
     // 5) COMANDI SERVER-SIDE GENERICI (/commands)
-    // ------------------------------------------------------------
     const { ok, data } = await this.postJSON("/commands", { command: input })
 
     // Non autenticato: comportamento coerente ovunque
@@ -842,6 +737,17 @@ export default class extends Controller {
         }
         this.printSpacerLine()
       })
+
+      // gestione timer
+      if (data.meta) {
+        if (data.meta.action === "start_timer") {
+          this.startTimer()
+        }
+        if (data.meta.action === "stop_timer") {
+          // Passiamo i secondi calcolati dal server alla funzione stopTimer
+          this.stopTimer(data.meta.donated_seconds)
+        }
+      }
 
       if (data.awaiting) {
         this.awaiting = data.awaiting

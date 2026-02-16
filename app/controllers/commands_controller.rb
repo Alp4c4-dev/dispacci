@@ -31,7 +31,6 @@ class CommandsController < ApplicationController
       return utility_result if utility_result.is_a?(Hash)
       return { lines: utility_result }
     end
-    # return { lines: utility_lines } if utility_lines
 
     # 2) Categoria
     category = CATEGORY_COMMANDS.find { |c| c.downcase == cmd_norm }
@@ -43,6 +42,14 @@ class CommandsController < ApplicationController
     unlockable = Unlockable.where("LOWER(key) = ?", cmd_norm).first
     if unlockable
       result = unlockable_lines_for(unlockable)
+
+      # Se la parola trovata è "timer", attiviamo la sessione e aggiungiamo i meta
+      if unlockable.key.downcase == "timer"
+        session[:timer_started_at] = Time.current
+
+        # Iniettiamo l'azione 'meta' nel risultato standard dell'Unlockable
+        result[:meta] = { action: "start_timer" }
+      end
 
       # Se è una keyword “definizione”, dopo aver stampato le righe
       # chiediamo al frontend di aspettare la risposta dell'utente
@@ -66,7 +73,6 @@ class CommandsController < ApplicationController
       [
         "Comandi di supporto:",
         "- help",
-        "- stats",
         "- logout",
         "- ping",
         "- whoami"
@@ -83,16 +89,15 @@ class CommandsController < ApplicationController
       g_sec = global_seconds % 60
       global_time_str = "#{g_min} minut#{g_min == 1 ? "o" : "i"} e #{g_sec} second#{g_sec == 1 ? "o" : "i"}"
 
-      # Target Tempo (Es. target 50.000 secondi per il volume)
-      target_seconds = 50000
-      seconds_remaining = [ target_seconds - global_seconds, 0 ].max
+      # Target Tempo (Es. target 450 minuti per il volume)
+      target_min = 450
 
       # 2. Definizioni
       global_definitions = WordDefinition.count
 
       # 3. Distruzione Dati
       global_score = GameSession.sum(:score)
-      global_mb = (global_score / 1024.0).round(2)
+      global_mb = global_score
 
       # --- COSTRUZIONE OUTPUT ---
       raw_lines = [
@@ -101,7 +106,7 @@ class CommandsController < ApplicationController
         "",
         "Liberare il tempo",
         "Totale tempo donato: #{global_time_str}",
-        "Tempo necessario per pubblicare il prossimo volume: #{seconds_remaining}''",
+        "Tempo necessario per pubblicare il prossimo volume: #{target_min} minuti",
         "",
         "Riconquistare il linguaggio",
         "Solitudine.",
@@ -130,7 +135,26 @@ class CommandsController < ApplicationController
     when "ping"
       [ "pong" ]
     when "stop"
-      []
+      start_time = session[:timer_started_at]
+      if start_time.nil?
+        return ["Nessun timer attivo"]
+      end
+
+      duration = (Time.current - start_time.to_time).to_i
+      duration = 0 if duration < 0
+
+      Donation.create!(
+        user: current_user,
+        seconds: duration,
+        started_at: start_time,
+        ended_at: Time.current
+      )
+      session.delete(:timer_started_at)
+
+      return {
+        items: [{ type: "text", text: "Timer interrotto correttamente."}],
+        meta: { action: "stop_timer", donated_seconds: duration}
+      }
     else
       nil
     end
