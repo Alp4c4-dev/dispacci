@@ -610,7 +610,7 @@ export default class extends Controller {
 
     // 3. Stampa messaggio
     this.printLine(
-      "Timer interrotto correttamente.\nDonazione completata con successo.\nGrazie " + name + "! Hai donato " +
+      "Donazione completata con successo.\nGrazie " + name + "! Hai donato " +
       minutes + " minut" + (minutes === 1 ? "o" : "i") +
       " e " +
       seconds + " second" + (seconds === 1 ? "o" : "i") +

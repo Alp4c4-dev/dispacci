@@ -114,7 +114,7 @@ class CommandsController < ApplicationController
         "",
         "Distruggere le macchine",
         "Blocky.",
-        "MB Distrutti: #{global_mb} MB / MB Totali: 1mld",
+        "MB Distrutti: #{global_mb} MB",
         "",
         "----LA TUA LOTTA----",
         "",
@@ -137,7 +137,7 @@ class CommandsController < ApplicationController
     when "stop"
       start_time = session[:timer_started_at]
       if start_time.nil?
-        return ["Nessun timer attivo"]
+        return [ "Nessun timer attivo" ]
       end
 
       duration = (Time.current - start_time.to_time).to_i
@@ -151,9 +151,9 @@ class CommandsController < ApplicationController
       )
       session.delete(:timer_started_at)
 
-      return {
-        items: [{ type: "text", text: "Timer interrotto correttamente."}],
-        meta: { action: "stop_timer", donated_seconds: duration}
+      {
+        items: [ { type: "text", text: "Timer interrotto correttamente." } ],
+        meta: { action: "stop_timer", donated_seconds: duration }
       }
     else
       nil
