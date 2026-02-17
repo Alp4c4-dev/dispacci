@@ -146,24 +146,22 @@
         background: #000;
         border: 1px solid #0a3;
         color: #0aff0a;
-        padding: 6px 8px;
-        font: inherit;
+        padding: 10px;              /* Un po' più comodo da cliccare col dito */
+        font-family: monospace;
+        font-size: 16px !important; /* FORZA 16px per evitare zoom su iOS */
         outline: none;
         box-sizing: border-box;
         margin-top: 4px;
+        border-radius: 0;           /* Niente angoli tondi su mobile */
+        -webkit-appearance: none;   /* Rimuove stile nativo iOS */
     }
 
-    /* contenitore delle 4 caselle del codice */
-    .code-boxes {
-        display: flex;
-        gap: 6px;       /* spazio orizzontale tra le caselle */
-        margin-top: 4px;
-    }
-
-    /* singole caselle per ogni cifra del codice */
-    .code-digit {
-        width: 40px;
-        text-align: center;
+    /* Stile specifico per l'inserimento della Parola d'Ordine */
+    #registration-code {
+        text-transform: uppercase; /* Tutto maiuscolo */
+        letter-spacing: 3px;       /* Lettere più larghe per enfasi */
+        font-weight: bold;
+        text-align: center;        /* Testo al centro (molto scenico) */
     }
 
     .box button {

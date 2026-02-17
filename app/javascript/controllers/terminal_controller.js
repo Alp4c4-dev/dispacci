@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "loginScreen", "loginUsername", "loginPassword", "loginError",
-    "codeScreen", "codeDigit", "codeError",
+    "codeScreen", "codeInput", "codeError",
     "terminal", "screen", "prompt"
   ]
 
@@ -37,7 +37,6 @@ export default class extends Controller {
     document.addEventListener("keydown", this.onSkipKeyDown)
 
     // UX
-    this.setupCodeDigits()
     this.loginUsernameTarget.focus()
 
     // Sessione al refresh
@@ -58,7 +57,7 @@ export default class extends Controller {
   backToLogin() {
     this.pendingUser = null
     this.codeErrorTarget.textContent = ""
-    this.codeDigitTargets.forEach(i => (i.value = ""))
+    this.codeInputTarget.value = ""
 
     this.codeScreenTarget.style.display = "none"
     this.loginScreenTarget.style.display = "flex"
@@ -91,7 +90,7 @@ export default class extends Controller {
     this.loginErrorTarget.textContent = ""
     this.codeErrorTarget.textContent = ""
     this.loginPasswordTarget.value = ""
-    this.codeDigitTargets.forEach(i => (i.value = ""))
+    this.codeInputTarget.value = ""
 
     // Focus
     setTimeout(() => this.loginUsernameTarget.focus(), 20)
@@ -161,25 +160,6 @@ export default class extends Controller {
     return { ok: res.ok, data }
   }
 
-  // -----------------------------
-  // UX 5-digit code
-  // -----------------------------
-  setupCodeDigits() {
-    this.codeDigitTargets.forEach((input, index) => {
-      input.addEventListener("input", () => {
-        const value = input.value
-        if (value.length === 1 && index < this.codeDigitTargets.length - 1) {
-          this.codeDigitTargets[index + 1].focus()
-        }
-      })
-
-      input.addEventListener("keydown", (event) => {
-        if (event.key === "Backspace" && input.value === "" && index > 0) {
-          this.codeDigitTargets[index - 1].focus()
-        }
-      })
-    })
-  }
 
   // -----------------------------
   // LOGIN / REGISTRAZIONE (via Rails)
@@ -221,8 +201,8 @@ export default class extends Controller {
       this.codeScreenTarget.style.display = "flex"
       this.codeErrorTarget.textContent = ""
 
-      this.codeDigitTargets.forEach(i => (i.value = ""))
-      this.codeDigitTargets[0]?.focus()
+      this.codeInputTarget.value = ""
+      setTimeout(() => this.codeInputTarget.focus(), 20)
       return
     }
 
@@ -241,25 +221,31 @@ export default class extends Controller {
       return
     }
 
-    const chars = this.codeDigitTargets.map(input => (input.value || "").trim().toUpperCase())
+    // 1. Leggi il valore da input
+    const rawCode = this.codeInputTarget.value || ""
+    const code = rawCode.trim().toUpperCase()
 
-    if (chars.some(c => c === "")) {
-      this.codeErrorTarget.textContent = "Inserire il codice"
+    // 2. Validazioni base
+    if (!code) {
+      this.codeErrorTarget.textContent = "Inserire la parola d'ordine"
       return
     }
 
-    const code = chars.join("")
-
-    if (!/^[A-Z]{5}$/.test(code)) {
-      this.codeErrorTarget.textContent = "Inserire 5 lettere"
+    if (code.length < 5) {
+      this.codeErrorTarget.textContent = "Parola d'ordine troppo breve"
       return
     }
 
+    if (code.length > 5) {
+      this.codeErrorTarget.textContent = "Parola d'ordine troppo lunga"
+      return
+    }
 
+    // 3. Invia al server
     const { ok, data } = await this.postJSON("/register", {
       username: this.pendingUser.username,
       password: this.pendingUser.password,
-      code
+      code // Invia la parola intera
     })
 
     if (ok && data.ok) {
@@ -270,7 +256,7 @@ export default class extends Controller {
       this.codeScreenTarget.style.display = "none"
       this.showTerminal()
     } else {
-      this.codeErrorTarget.textContent = data.error || "Registrazione fallita"
+      this.codeErrorTarget.textContent = data.error || "Parola d'ordine errata"
     }
   }
 

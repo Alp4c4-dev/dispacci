@@ -27,47 +27,16 @@
   <div id="code-screen" class="full-screen" data-terminal-target="codeScreen" style="display:none;">
     <div class="box">
       <h1>Registrazione</h1>
-      <p style="font-size: 13px; margin-bottom: 8px;">Inserisci il codice.</p>
 
       <label>
-        Codice
-        <div class="code-boxes">
-          <input class="code-digit" 
-                 type="text" 
-                 maxlength="1" 
-                 autocomplete="off"
-                 spellcheck="false"
-                 data-terminal-target="codeDigit"
-                 data-action="keydown.enter->terminal#attemptRegistration" />
-          <input class="code-digit" 
-                 type="text" 
-                 maxlength="1" 
-                 autocomplete="off"
-                 spellcheck="false"
-                 data-terminal-target="codeDigit"
-                 data-action="keydown.enter->terminal#attemptRegistration" />
-          <input class="code-digit" 
-                 type="text" 
-                 maxlength="1" 
-                 autocomplete="off"
-                 spellcheck="false"
-                 data-terminal-target="codeDigit"
-                 data-action="keydown.enter->terminal#attemptRegistration" />
-          <input class="code-digit" 
-                 type="text" 
-                 maxlength="1" 
-                 autocomplete="off"
-                 spellcheck="false"
-                 data-terminal-target="codeDigit"
-                 data-action="keydown.enter->terminal#attemptRegistration" />
-          <input class="code-digit" 
-                 type="text" 
-                 maxlength="1" 
-                 autocomplete="off"
-                 spellcheck="false"
-                 data-terminal-target="codeDigit"
-                 data-action="keydown.enter->terminal#attemptRegistration" />
-        </div>
+        Parola d'ordine
+        <input id="registration-code"
+               type="text"
+               autocomplete="off"
+               spellcheck="false"
+               style="text-transform: uppercase;"
+               data-terminal-target="codeInput"
+               data-action="keydown.enter->terminal#attemptRegistration" />
       </label>
 
       <button id="code-button" type="button" data-action="click->terminal#attemptRegistration">Conferma e accedi</button>
