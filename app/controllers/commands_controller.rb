@@ -35,7 +35,13 @@ class CommandsController < ApplicationController
     # 2) Categoria
     category = CATEGORY_COMMANDS.find { |c| c.downcase == cmd_norm }
     if category
-      return { lines: category_listing_lines(category) }
+      # Recuperiamo le righe di testo
+      text_lines = category_listing_lines(category)
+
+      # Le convertiamo in oggetti "items" con stile payload (BIANCO)
+      items = text_lines.map { |line| { type: "text", text: line, style: "payload" } }
+
+      return { items: items }
     end
 
     # 3) Keyword unlockable
@@ -175,7 +181,7 @@ class CommandsController < ApplicationController
       lines << "Nell'Armeria trovi i nostri pochi ma potenti strumenti di resistenza. Fai la tua parte, combatti."
     end
 
-    lines << "Voci sbloccate:"
+    lines << "File sbloccati:"
 
     if unlockables.empty?
       lines << "(nessun contenuto nel catalogo)"
