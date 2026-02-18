@@ -300,8 +300,16 @@ class CommandsController < ApplicationController
         ]
       end
 
-      # SOLO i pezzi di payload vengono marcati come payload
-      parts.map { |part| { type: "text", text: part, style: "payload" } }
+      parts.map do |part|
+        if part.start_with?("IMAGE::")
+          # Se inizia con il prefisso magico, è un'immagine
+          url = part.sub("IMAGE::", "").strip
+          { type: "image", url: url }
+        else
+          # Altrimenti è testo normale
+          { type: "text", text: part, style: "payload" }
+        end
+      end
 
     when "image"
       [ { type: "image", url: payload } ]

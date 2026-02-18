@@ -101,7 +101,7 @@ button{border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(
 </div>
 </article>
 
-<!-- 3 — AURELIUS (spostato) -->
+<!-- 3 — AURELIUS -->
 <article class="card" data-price="mid">
 <div class="thumb">
 <span class="badge">Protettori</span>

@@ -687,7 +687,7 @@ export default class extends Controller {
 
     // 4) Se il timer è attivo, blocchiamo tutto TRANNE il comando "stop"
     // Questo permette a "stop" di scendere giù e chiamare il server.
-    if (this.timerActive && input !== "stop") {
+    if (this.timerActive && input.toLowerCase() !== "stop") {
       this.timerWarningCount++
       if (this.timerWarningCount === 1) {
         this.printLine("Attenzione. Timer attivo. Digita 'stop' per fermarlo.")
