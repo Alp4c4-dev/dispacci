@@ -27,6 +27,14 @@ export default class extends Controller {
     this.skipPrinting = false
     this.printQueue = Promise.resolve()
 
+    // Listener visibilità (supporto timer)
+    this.onVisibilityChange = () => {
+      // se la pagina viene nascosta e il timer è attivo
+      if (document.hidden && this.timerActive) {
+        this.handleTimerInterruption()
+      }
+    }
+
     this.onSkipKeyDown = (e) => {
       if (!this.isPrinting) return
       if (e.key === " " || e.key === "Enter") {
@@ -52,6 +60,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("keydown", this.onGlobalKeyDown)
     document.removeEventListener("keydown", this.onSkipKeyDown)
+    document.removeEventListener("visibilitychange", this.onVisibilityChange)
   }
 
   backToLogin() {
@@ -603,6 +612,16 @@ export default class extends Controller {
       ", ne faremo buon uso."
     )
 
+  }
+
+  async handleTimerInterruption() {
+    // 1. Avvisa l'utente del motivo
+    this.printLine("Rilevata perdita di focus (cambio finestra/schermata).")
+    this.printLine("Interruzione automatica protocollo per sicurezza...")
+
+    // 2. Esegue forzatamente il comando "stop"
+    // Questo invia la richiesta al server, calcola il tempo, salva e stampa il riepilogo.
+    await this.handleCommand("stop")
   }
 
   cancelTimer() {
