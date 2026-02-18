@@ -27,7 +27,7 @@ rows = [
   { key: "fotografia01", category: "Galleria", kind: "image", payload: "/media/img/fotografia01.webp" },
   { key: "Blocky", category: "Galleria", kind: "image", payload: "/media/img/blocky.webp" },
   { key: "Segreto", category: "Galleria", kind: "image", payload: "/media/img/segreto.webp" },
-  { key: "Credits", category: "Galleria", kind: "text", payload: nil }, # payload misto testo-immagine
+  { key: "Credits", category: "Galleria", kind: "text", payload: payload_for.call("Credits.txt") }, # payload misto testo-immagine
 
   # ----------------
   # Armeria
