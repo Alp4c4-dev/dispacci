@@ -28,9 +28,9 @@ export default class extends Controller {
     this.printQueue = Promise.resolve()
 
     // Listener visibilità (supporto timer)
-    this.onVisibilityChange = () => {
-      // se la pagina viene nascosta e il timer è attivo
-      if (document.hidden && this.timerActive) {
+    this.onWindowBlur = () => {
+      // se la finestra perde focus e il timer è attivo
+      if (this.timerActive) {
         this.handleTimerInterruption()
       }
     }
@@ -60,7 +60,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("keydown", this.onGlobalKeyDown)
     document.removeEventListener("keydown", this.onSkipKeyDown)
-    document.removeEventListener("visibilitychange", this.onVisibilityChange)
+    document.removeEventListener("blur", this.onWindowBlur)
   }
 
   backToLogin() {
@@ -615,7 +615,7 @@ export default class extends Controller {
     clearInterval(this.timerIntervalId)
     this.timerIntervalId = null
 
-    this.printLine("Timer azzerato.")
+    this.printLine("Timer azzerato.", "error-text")
     this.updateTimerDisplay(0)
 
     this.timerActive = false
@@ -698,7 +698,7 @@ export default class extends Controller {
       } else {
         // Al secondo errore, abortiamo lato client (senza salvare su server)
         this.cancelTimer()
-        this.printLine("Sessione timer abortita per attività non consentita.")
+        this.printLine("Sessione timer abortita per attività non consentita.", "error-text")
         this.printSpacerLine()
         this.printReadyPrompt()
       }

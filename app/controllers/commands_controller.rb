@@ -107,22 +107,22 @@ class CommandsController < ApplicationController
 
       # --- COSTRUZIONE OUTPUT ---
       raw_lines = [
-        "----FRONTE DELLA RESISTENZA----",
+        "**----FRONTE DELLA RESISTENZA----**",
         "N.Ribelli arruolati: #{User.count}",
         "",
-        "Liberare il tempo",
+        "**Liberare il tempo**",
         "Totale tempo donato: #{global_time_str}",
         "Tempo necessario per pubblicare il prossimo volume: #{target_min} minuti",
         "",
-        "Riconquistare il linguaggio",
+        "**Riconquistare il linguaggio**",
         "Solitudine.",
         "N.Definizioni raccolte: #{global_definitions}",
         "",
-        "Distruggere le macchine",
+        "**Distruggere le macchine**",
         "Blocky.",
         "MB Distrutti: #{global_mb} MB",
         "",
-        "----LA TUA LOTTA----",
+        "**----LA TUA LOTTA----**",
         "",
         "Tempo donato: #{s[:donation_time]}", # Usa la tua formattazione da user.rb
         "Parole riconquistate: #{s[:definitions_count]}",
