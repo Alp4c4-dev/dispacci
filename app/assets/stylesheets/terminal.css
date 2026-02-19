@@ -59,6 +59,10 @@
         color: #ffffff;      /* anche il grassetto resta bianco */
     }
 
+    .line.error-text {
+        color: #ff5555;
+    }
+
     .line::before {
         content: ">";
         position: absolute;

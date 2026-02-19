@@ -1,0 +1,5 @@
+Avvio timer di disconnessione in corso...
+Per interrompere il timer, digita stop.
+
+Qualunque altro comando causerà l'interruzione del timer.
+Qualunque altra azione (cambiare finestra, uscire dall'app) causerà l'interruzione del timer.

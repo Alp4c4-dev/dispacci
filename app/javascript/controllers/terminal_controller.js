@@ -401,11 +401,13 @@ export default class extends Controller {
     }
   }
 
-  printLine(text) {
+  printLine(text, extraClass ="") {
     const line = document.createElement("div")
     line.className = "line"
 
     text = this.normalizePayloadText(text)
+
+    if (extraClass) line.classList.add(extraClass)
 
     if (text.startsWith("\u0000")) {
       line.classList.add("no-prompt")
@@ -595,23 +597,6 @@ export default class extends Controller {
     this.timerActive = false
     this.timerWarningCount = 0
 
-    // 2. Prepara i dati
-    // Usiamo il valore del server, fallback a 0 se undefined
-    const totalSeconds = (typeof serverSeconds === 'number') ? serverSeconds : 0
-
-    const minutes = Math.floor(totalSeconds / 60)
-    const seconds = totalSeconds % 60
-    const name = this.currentUser?.username || "Ribelle"
-
-    // 3. Stampa messaggio
-    this.printLine(
-      "Donazione completata con successo.\nGrazie " + name + "! Hai donato " +
-      minutes + " minut" + (minutes === 1 ? "o" : "i") +
-      " e " +
-      seconds + " second" + (seconds === 1 ? "o" : "i") +
-      ", ne faremo buon uso."
-    )
-
   }
 
   async handleTimerInterruption() {
@@ -709,8 +694,7 @@ export default class extends Controller {
     if (this.timerActive && input.toLowerCase() !== "stop") {
       this.timerWarningCount++
       if (this.timerWarningCount === 1) {
-        this.printLine("Attenzione. Timer attivo. Digita 'stop' per fermarlo.")
-        this.printReadyPrompt() // Ristampa il prompt per permettere di riprovare
+        this.printLine("Attenzione. Timer attivo. Digita 'stop' per fermarlo.", "error-text")
       } else {
         // Al secondo errore, abortiamo lato client (senza salvare su server)
         this.cancelTimer()
@@ -747,6 +731,7 @@ export default class extends Controller {
       if (data.meta) {
         if (data.meta.action === "start_timer") {
           this.startTimer()
+          return
         }
         if (data.meta.action === "stop_timer") {
           // Passiamo i secondi calcolati dal server alla funzione stopTimer

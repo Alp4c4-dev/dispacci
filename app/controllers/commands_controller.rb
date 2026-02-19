@@ -157,8 +157,16 @@ class CommandsController < ApplicationController
       )
       session.delete(:timer_started_at)
 
+      # Calcolo il tempo trascorso
+      minutes = duration / 60
+      seconds = duration % 60
+      min_label = minutes == 1 ? "minuto" : "minuti"
+      sec_label = seconds == 1 ? "secondo" : "secondi"
+
+      msg = "Timer interrotto correttamente.\nDonazione completata con successo.\nGrazie #{current_user.username}! Hai donato #{minutes} #{min_label} e #{seconds} #{sec_label}, ne faremo buon uso."
+
       {
-        items: [ { type: "text", text: "Timer interrotto correttamente." } ],
+        items: [ { type: "text", text: msg, style: "payload" } ],
         meta: { action: "stop_timer", donated_seconds: duration }
       }
     else
