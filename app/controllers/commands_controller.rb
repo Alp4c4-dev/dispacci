@@ -169,6 +169,14 @@ class CommandsController < ApplicationController
         items: [ { type: "text", text: msg, style: "payload" } ],
         meta: { action: "stop_timer", donated_seconds: duration }
       }
+    when "abort_timer"
+      # elimina la variabile di sessione senza calcolare il tempo
+      session.delete(:timer_started_at)
+
+      {
+        items: [], # nessun messaggio da stampare
+        meta: { action: "abort_timer" }
+      }
     else
       nil
     end

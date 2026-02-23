@@ -21,19 +21,32 @@ export default class extends Controller {
     this.timerLastMs = 0
     this.timerWarningCount = 0
     this.timerLineEl = null
+    this.isInterrupting = false
 
     // Typewriter effect
     this.isPrinting = false
     this.skipPrinting = false
     this.printQueue = Promise.resolve()
 
-    // Listener visibilità (supporto timer)
+    // Supporto timer
+    // Listener perdita focus
     this.onWindowBlur = () => {
       // se la finestra perde focus e il timer è attivo
       if (this.timerActive) {
         this.handleTimerInterruption()
       }
     }
+
+    // Listener per cambio scheda o app
+    this.onVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && this.timerActive) {
+        this.handleTimerInterruption()
+      }
+    }
+
+    // Aggiunta listener per registrazione eventi
+    window.addEventListener("blur", this.onWindowBlur)
+    document.addEventListener("visibilitychange", this.onVisibilityChange)
 
     this.onSkipKeyDown = (e) => {
       if (!this.isPrinting) return
@@ -61,6 +74,7 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.onGlobalKeyDown)
     document.removeEventListener("keydown", this.onSkipKeyDown)
     document.removeEventListener("blur", this.onWindowBlur)
+    window.removeEventListener("visibilitychange", this.onVisibilityChange)
   }
 
   backToLogin() {
@@ -600,27 +614,38 @@ export default class extends Controller {
   }
 
   async handleTimerInterruption() {
-    // 1. Avvisa l'utente del motivo
-    this.printLine("Rilevata perdita di focus (cambio finestra/schermata).")
-    this.printLine("Interruzione automatica protocollo per sicurezza...")
+    if (this.isInterrupting) return
+    this.isInterrupting = true
 
-    // 2. Esegue forzatamente il comando "stop"
-    // Questo invia la richiesta al server, calcola il tempo, salva e stampa il riepilogo.
-    await this.handleCommand("stop")
+    // Stampa i messaggi specifici per il cambio finestra
+    this.printLine("Rilevata perdita di focus (cambio finestra/schermata).", "error-text")
+    this.cancelTimer()
+    this.printSpacerLine()
+    this.printReadyPrompt()
+
+    this.isInterrupting = false
   }
 
   cancelTimer() {
     if (!this.timerActive) return
 
+    // ferma l'intervallo e resetta lo stato
     clearInterval(this.timerIntervalId)
     this.timerIntervalId = null
-
-    this.printLine("Timer azzerato.", "error-text")
-    this.updateTimerDisplay(0)
-
     this.timerActive = false
-    this.timerLastMs = 0
     this.timerWarningCount = 0
+
+    // stampa messaggio di errore
+    this.printLine("Timer azzerato.", "error-text")
+
+    // aggiorna visivamente la riga del timer congelata
+    if (this.timerLineEl) {
+      this.timerLineEl.textContent += " [ANNULLATO]"
+      this.timerLineEl.classList.add("error-text")
+    }
+
+    // avvisa il server in background
+    this.postJSON("/commands", { command: "abort_timer" })
   }
 
   // -----------------------------
