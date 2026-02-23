@@ -48,14 +48,40 @@ export default class extends Controller {
     window.addEventListener("blur", this.onWindowBlur)
     document.addEventListener("visibilitychange", this.onVisibilityChange)
 
+    // stati per la pausa
+    this.isWaitingForInput = false
+    this.resumePrintingResolve = null
+
     this.onSkipKeyDown = (e) => {
+      // se in pausa a fine paragrafo, sblocca
+      if (this.isWaitingForInput && (e.key === " " || e.key === "Enter")) {
+        e.preventDefault() // evita lo scroll con Spazio
+        this.resumePrinting()
+        return
+      }
+
+      // se in stampa, accelera
       if (!this.isPrinting) return
       if (e.key === " " || e.key === "Enter") {
+        e.preventDefault() // evita scroll
         this.skipPrinting = true
       }
     }
 
     document.addEventListener("keydown", this.onSkipKeyDown)
+
+    // Tap/Click su schermo
+    this.onScreenTap = (e) => {
+      // Evita di catturare il click se si preme un link <a> o un elemento multimediale
+      if (e.target.closest("a, audio, video")) return
+
+      if (this.isWaitingForInput) {
+        this.resumePrinting()
+      } else if (this.isPrinting) {
+        this.skipPrinting = true
+      }
+    }
+    this.screenTarget.addEventListener("click", this.onScreenTap)
 
     // UX
     this.loginUsernameTarget.focus()
@@ -73,6 +99,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("keydown", this.onGlobalKeyDown)
     document.removeEventListener("keydown", this.onSkipKeyDown)
+    this.screenTarget.removeEventListener("click", this.onScreenTap)
     document.removeEventListener("blur", this.onWindowBlur)
     window.removeEventListener("visibilitychange", this.onVisibilityChange)
   }
@@ -519,6 +546,39 @@ export default class extends Controller {
     this.screenTarget.appendChild(line)
   }
 
+  async waitForUser() {
+    this.isWaitingForInput = true
+
+    // Crea l'indicatore "..."
+    const indicator = document.createElement("span")
+    indicator.className = "waiting-indicator"
+    indicator.textContent = " ..."
+    // Un po' di stile per farlo lampeggiare
+    indicator.style.animation = "blink 1s step-end infinite"
+
+    // Appendi l'indicatore all'ultima riga appena stampata
+    const lastLine = this.screenTarget.lastElementChild
+    if (lastLine) {
+      lastLine.appendChild(indicator)
+    }
+
+    // Aspetta finché l'utente non preme il tasto
+    await new Promise(resolve => {
+      this.resumePrintingResolve = resolve
+    })
+
+    // L'utente ha premuto: rimuovi "..." e prosegui
+    indicator.remove()
+    this.isWaitingForInput = false
+    this.resumePrintingResolve = null
+  }
+
+  resumePrinting() {
+    if (this.resumePrintingResolve) {
+      this.resumePrintingResolve()
+    }
+  }
+
   async printItemsTypewriter(items, { lineDelay = 140, charDelay = 10 } = {}) {
     this.isPrinting = true
     this.skipPrinting = false
@@ -530,21 +590,36 @@ export default class extends Controller {
         if (item.type === "text") {
           const lines = this.splitIntoTerminalLines(item.text ?? "")
 
+          // Controlliamo il flag che abbiamo messo nel backend
+          const isInteractive = item.interactive === true
+
           for (let i = 0; i < lines.length; i++) {
             const l = lines[i]
 
-            // Solo la prima riga mostra il prompt.
-            // Le righe successive (e le righe vuote) diventano "no-prompt".
             const isFirstVisible = (i === 0 && l !== "")
             const printable = isFirstVisible ? l : `\u0000${l === "" ? " " : l}`
 
             const extraClass = (item.style === "payload") ? "payload-text" : ""
             await this.printLineTypewriter(printable, { charDelay, extraClass })
-            if (!this.skipPrinting) await this.sleep(lineDelay)
+
+            // SE è un file txt interattivo
+            if (isInteractive) {
+              // Resettiamo skipPrinting: se l'utente ha saltato il paragrafo corrente,
+              // il prossimo ricomincerà con l'effetto macchina da scrivere.
+              this.skipPrinting = false
+
+              // Pausa solo se la riga NON è vuota. Se è un "a capo" lo salta.
+              if (l.trim() !== "") {
+                await this.waitForUser()
+              }
+            } else {
+              // Se NON è interattivo (es. /help), applica solo un ritardo minimo tra le righe
+              if (!this.skipPrinting) await this.sleep(lineDelay)
+            }
           }
 
         } else {
-          // media: render immediato (niente typewriter)
+          // Media: render immediato
           this.renderItem(item)
           if (!this.skipPrinting) await this.sleep(lineDelay)
         }

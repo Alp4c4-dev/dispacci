@@ -309,7 +309,7 @@ class CommandsController < ApplicationController
         first = parts.first || "Accesso concesso."
         return [
           { type: "text", text: first, style: "payload" },
-          { type: "link", text: "Apri Aurelius // Breakout", url: "/games/breakout" }
+          { type: "link", text: "Aurelius", url: "/games/breakout" }
         ]
       end
 
@@ -329,7 +329,8 @@ class CommandsController < ApplicationController
           { type: "image", url: url }
         else
           # Altrimenti è testo normale
-          { type: "text", text: part, style: "payload" }
+          # interactive: true per triggerare la pausa nel frontend
+          { type: "text", text: part, style: "payload", interactive: true }
         end
       end
 
