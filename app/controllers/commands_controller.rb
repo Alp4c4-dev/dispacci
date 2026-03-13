@@ -3,7 +3,7 @@ require "set"
 class CommandsController < ApplicationController
   before_action :require_login!
 
-  CATEGORY_COMMANDS = %w[Dossier Galleria Armeria].freeze
+  CATEGORY_COMMANDS = %w[Dossier Galleria Armeria Mappa].freeze
   DEFINITION_KEYWORDS = %w[solitudine].freeze
 
   def create
@@ -35,11 +35,25 @@ class CommandsController < ApplicationController
     # 2) Categoria
     category = CATEGORY_COMMANDS.find { |c| c.downcase == cmd_norm }
     if category
-      # Recuperiamo le righe di testo
-      text_lines = category_listing_lines(category)
+      items = []
 
-      # Le convertiamo in oggetti "items" con stile payload (BIANCO)
-      items = text_lines.map { |line| { type: "text", text: line, style: "payload" } }
+      # A. Recuperiamo il testo narrativo dal SystemPayload
+      sys_payload = SystemPayload.find_by(key: category.downcase)
+      if sys_payload
+        intro_items = render_generic_items(sys_payload.kind, sys_payload.payload, interactive: false)
+        items.concat(intro_items)
+      end
+
+      # B. Generiamo la lista dinamica dei file sbloccati
+      file_lines = category_listing_lines(category)
+      file_items = file_lines.map { |line| { type: "text", text: line, style: "payload" } }
+      items.concat(file_items)
+
+      # C. Se la categoria è Mappa, aggiungiamo il link alla view interattiva
+      if category == "Mappa"
+        items << { type: "text", text: "", style: "payload" } # Spazio vuoto per staccare
+        items << { type: "link", text: "Mappa", url: "/map" }
+      end
 
       return { items: items }
     end
@@ -84,7 +98,7 @@ class CommandsController < ApplicationController
         "- whoami"
       ]
     when "resistenza"
-      # --- DATI UTENTE (Calcolati nel tuo nuovo user.rb) ---
+      # --- DATI UTENTE (calcolati in user.rb) ---
       s = current_user.stats
 
       # --- DATI GLOBALI (Fronte della Resistenza) ---
@@ -187,17 +201,6 @@ class CommandsController < ApplicationController
     unlocked_ids = current_user.user_unlocks.pluck(:unlockable_id).to_set
 
     lines = []
-
-    case category_cmd
-    when "Dossier"
-      lines << "Nel Dossier trovi i file con le informazioni sul nostro mondo e sui nostri nemici. Torna qui  quando hai bisogno di orientarti in questo grigio presente."
-    when "Galleria"
-      lines << "Nella Galleria trovi le testimonianze di altri ribelli. Siamo tantə: non sei solo, non sei sola."
-    when "Armeria"
-      lines << "Nell'Armeria trovi i nostri pochi ma potenti strumenti di resistenza. Fai la tua parte, combatti."
-    end
-
-    lines << "File sbloccati:"
 
     if unlockables.empty?
       lines << "(nessun contenuto nel catalogo)"
@@ -331,6 +334,39 @@ class CommandsController < ApplicationController
           # Altrimenti è testo normale
           # interactive: true per triggerare la pausa nel frontend
           { type: "text", text: part, style: "payload", interactive: true }
+        end
+      end
+
+    when "image"
+      [ { type: "image", url: payload } ]
+
+    when "audio"
+      [ { type: "audio", url: payload } ]
+
+    when "video"
+      [ { type: "video", url: payload } ]
+
+    else
+      []
+    end
+  end
+
+  def render_generic_items(kind, payload, interactive: false)
+    return [] if payload.blank?
+
+    case kind.to_s
+    when "text", "command"
+      parts = payload.split("[[NEXT]]").map(&:strip).reject(&:blank?)
+
+      parts.map do |part|
+        if part.start_with?("IMAGE::")
+          url = part.sub("IMAGE::", "").strip
+          { type: "image", url: url}
+        else
+          # Assegniamo la chiave interactive solo se il parametro è true
+          item = { type: "text", text: part, style: "payload" }
+          item[:interactive] = true if interactive
+          item
         end
       end
 

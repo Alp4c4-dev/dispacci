@@ -1,0 +1,27 @@
+<div id="map-interface-container" data-controller="map">
+
+  <div class="map-visual">
+    <img src="/media/map/mappa.webp" data-map-target="image" alt="Mappa">
+  </div>
+
+  <div class="map-console">
+    <div class="map-message" data-map-target="message">
+      Inserisci coordinate o premi pulsante 'Esci'
+    </div>
+
+    <form data-action="submit->map#verify" class="map-form">
+
+      <div class="map-input-row">
+        <input type="text" data-map-target="coordinate" class="input-coord" placeholder="XY" maxlength="2" required autocomplete="off">
+
+        <input type="text" data-map-target="text" class="input-text" placeholder="Testo decodificato" required autocomplete="off">
+      </div>
+
+      <div class="map-actions">
+        <button type="submit" class="btn-confirm">Conferma</button>
+        <button type="button" class="btn-exit" data-action="click->map#exit">Esci</button>
+      </div>
+    </form>
+  </div>
+
+</div>

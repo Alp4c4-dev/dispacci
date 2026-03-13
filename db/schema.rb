@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_12_100100) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_13_100146) do
   create_table "donations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "ended_at"
@@ -32,6 +32,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_12_100100) do
     t.index ["game_key", "score"], name: "index_game_sessions_on_game_key_and_score"
     t.index ["user_id", "game_key"], name: "index_game_sessions_on_user_id_and_game_key"
     t.index ["user_id"], name: "index_game_sessions_on_user_id"
+  end
+
+  create_table "system_payloads", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key"
+    t.string "kind"
+    t.text "payload"
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_system_payloads_on_key", unique: true
   end
 
   create_table "unlockables", force: :cascade do |t|

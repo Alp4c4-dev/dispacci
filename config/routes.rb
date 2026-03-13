@@ -21,6 +21,9 @@ Rails.application.routes.draw do
 
   post "/definitions", to: "word_definitions#create"
 
+  get "map", to: "maps#show"
+  post "map/verify", to: "maps#verify"
+
   get "/payloads/html/:id", to: "payloads#html", as: :html_payload
 
   get "/games/breakout", to: "games#breakout"

@@ -1,0 +1,187 @@
+Ecco il codice condiviso da Alfiere. Se questa è una richiesta di aiuto, rispondiamo.
+
+[[NEXT]]
+
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Atelier delle Miniature — Eshop</title>
+<style>
+:root{
+--bg:#0f1720;
+--card:#0b1220;
+--muted:#9aa6b2;
+--accent:#f59e0b;
+--accent-2:#06b6d4;
+--glass: rgba(255,255,255,0.04);
+--radius:12px;
+font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+*{box-sizing:border-box}
+body{
+margin:0;
+background:#08121e;
+color:#e6eef6;
+padding:28px;
+line-height:1.4;
+}
+header{display:flex;gap:16px;align-items:center;margin-bottom:22px;}
+.logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#071021;font-size:18px;}
+h1{font-size:18px;margin:0}
+p.lead{color:var(--muted);margin:0;font-size:13px}
+.toolbar{margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;}
+.search{display:flex;gap:8px;background:var(--glass);padding:10px 14px;border-radius:999px;min-width:260px;}
+.search input{background:transparent;border:none;color:inherit;outline:none;font-size:14px;}
+.grid{margin-top:20px;display:grid;gap:16px;grid-template-columns:repeat(3,1fr);}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.grid{grid-template-columns:1fr;}}
+.card{background:rgba(255,255,255,0.02);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.45);display:flex;flex-direction:column;gap:10px;}
+.thumb{aspect-ratio:4/3;background:#0a1526;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;}
+.thumb svg{width:100%;height:100%;object-fit:cover;}
+.badge{position:absolute;top:10px;left:10px;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,0.45);font-size:12px;color:var(--accent-2);}
+.title{font-weight:700;font-size:15px;}
+.meta{color:var(--muted);font-size:13px;}
+.price{font-weight:700;font-size:15px;color:var(--accent);}
+.buy{margin-top:auto;display:flex;gap:8px;}
+button{border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,var(--accent),#d97706);color:#071021;font-weight:700;cursor:pointer;}
+.ghost{background:transparent;border:1px solid rgba(255,255,255,0.07);color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">MD</div>
+<div>
+<h1>Atelier delle Miniature — Emporio</h1>
+<p class="lead">Figure da dipingere e collezionare — edizioni artigianali</p>
+</div>
+</header>
+
+<div class="toolbar">
+<div class="search"><input id="q" placeholder="Cerca miniature..."></div>
+</div>
+
+<section class="grid">
+
+<!-- 1 — ORCO DI PIETRA -->
+<article class="card" data-price="cheap">
+<div class="thumb">
+<span class="badge">Bestie</span>
+<svg viewBox="0 0 100 75">
+<rect width="100" height="75" fill="#1d1f24"/>
+<path d="M20 60 L40 20 L60 20 L80 60 Z" fill="#675f4a"/>
+<circle cx="50" cy="28" r="10" fill="#8c7e65"/>
+</svg>
+</div>
+<div class="title">Orco di Pietra</div>
+<div class="meta">Resina · Scala 28mm</div>
+<div class="price">$ 14.90</div>
+<div class="buy">
+<button>Aggiungi</button><button class="ghost">Dettagli</button>
+</div>
+</article>
+
+<!-- 2 — CAVALIERE D’ARGENTO -->
+<article class="card" data-price="cheap">
+<div class="thumb">
+<span class="badge">Cavalieri</span>
+<svg viewBox="0 0 100 75">
+<rect width="100" height="75" fill="#151922"/>
+<rect x="40" y="30" width="20" height="30" fill="#c7cbd4"/>
+<circle cx="50" cy="22" r="10" fill="#dfe4eb"/>
+</svg>
+</div>
+<div class="title">Cavaliere d'Argento</div>
+<div class="meta">Resina · Scala 32mm</div>
+<div class="price">$ 28.00</div>
+<div class="buy">
+<button>Aggiungi</button><button class="ghost">Dettagli</button>
+</div>
+</article>
+
+<!-- 3 — AURELIUS -->
+<article class="card" data-price="mid">
+<div class="thumb">
+<span class="badge">Protettori</span>
+<svg viewBox="0 0 100 75">
+<rect width="100" height="75" fill="#101726"/>
+<circle cx="50" cy="28" r="12" fill="#f0b44c"/>
+<rect x="44" y="40" width="12" height="25" rx="2" fill="#142030"/>
+</svg>
+</div>
+<div class="title">Aurelius, mago protettore</div>
+<div class="meta">Mantellobianco · Scala 28mm</div>
+<div class="price">$$ 32.00</div>
+<div class="buy">
+<button>Aggiungi</button><button class="ghost">Dettagli</button>
+</div>
+</article>
+
+<!-- 4 — RATTO ASSASSINO -->
+<article class="card" data-price="cheap">
+<div class="thumb">
+<span class="badge">Ombre</span>
+<svg viewBox="0 0 100 75">
+<rect width="100" height="75" fill="#171b22"/>
+<ellipse cx="50" cy="48" rx="20" ry="12" fill="#50545a"/>
+</svg>
+</div>
+<div class="title">Ratto Assassino</div>
+<div class="meta">Carne · Scala 1:1</div>
+<div class="price">$ 12.90</div>
+<div class="buy">
+<button>Aggiungi</button><button class="ghost">Dettagli</button>
+</div>
+</article>
+
+<!-- 5 — CUSTODE DELLE RELIQUIE -->
+<article class="card" data-price="cheap">
+<div class="thumb">
+<span class="badge">Protettori</span>
+<svg viewBox="0 0 100 75">
+<rect width="100" height="75" fill="#121722"/>
+<rect x="35" y="30" width="30" height="35" fill="#394b57"/>
+</svg>
+</div>
+<div class="title">Custode delle Reliquie</div>
+<div class="meta">Resina · Scala 28mm</div>
+<div class="price">$ 23.00</div>
+<div class="buy">
+<button>Aggiungi</button><button class="ghost">Dettagli</button>
+</div>
+</article>
+
+<!-- 6 — ARCIERE DELLE DUNE -->
+<article class="card" data-price="cheap">
+<div class="thumb">
+<span class="badge">Desert</span>
+<svg viewBox="0 0 100 75">
+<rect width="100" height="75" fill="#1b1209"/>
+<polygon points="50,20 60,45 40,45" fill="#caa46e"/>
+</svg>
+</div>
+<div class="title">Arciere delle Dune</div>
+<div class="meta">Resina · Scala 28mm</div>
+<div class="price">$ 25.00</div>
+<div class="buy">
+<button>Aggiungi</button><button class="ghost">Dettagli</button>
+</div>
+</article>
+
+</section>
+
+<script>
+// ricerca semplice
+document.getElementById('q').addEventListener('input', e=>{
+const q=e.target.value.toLowerCase();
+document.querySelectorAll('.card').forEach(c=>{
+const t=c.querySelector('.title').textContent.toLowerCase();
+c.style.display = t.includes(q)?'':'none';
+});
+});
+</script>
+
+</body>
+</html>
