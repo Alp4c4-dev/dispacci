@@ -14,9 +14,9 @@ rows = [
   # ----------------
   # Mappa
   # ----------------
-  { key: "B3 - Tulipani", category: "Mappa", kind: "text", payload: "Coordinate B3 acquisite" },
-  { key: "B4 - Camelie", category: "Mappa", kind: "text", payload: "Coordinate B4 acquisite" },
-  { key: "D1 - Gerani", category: "Mappa", kind: "text", payload: "Coordinate D1 acquisite" },
+  { key: "B3 - Tulipani", category: "Mappa", kind: "text", payload: payload_for.call("unlockables/B3 Tulipani.txt") },
+  { key: "B4 - Camelie", category: "Mappa", kind: "text", payload: payload_for.call("unlockables/B4 Camelie.txt") },
+  { key: "D1 - Gerani", category: "Mappa", kind: "text", payload: payload_for.call("unlockables/D1 Gerani.txt") },
 
   # ----------------
   # Dossier

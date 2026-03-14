@@ -24,6 +24,9 @@ class User < ApplicationRecord
     armeria_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: "Armeria" }).count
     armeria_total = Unlockable.where(category: "Armeria").count
 
+    mappa_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: "Mappa" }).count
+    mappa_total = Unlockable.where(category: "Mappa").count
+
     {
       # Dati formattati per la visualizzazione
       donation_time: format_donation_time(total_seconds),
@@ -37,7 +40,8 @@ class User < ApplicationRecord
       # Dettagli categorie (Array [sbloccati, totali])
       dossier: [ dossier_unlocked, dossier_total ],
       galleria: [ galleria_unlocked, galleria_total ],
-      armeria: [ armeria_unlocked, armeria_total ]
+      armeria: [ armeria_unlocked, armeria_total ],
+      mappa: [ mappa_unlocked, mappa_total ]
 
     }
   end

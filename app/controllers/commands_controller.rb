@@ -144,7 +144,8 @@ class CommandsController < ApplicationController
         "Codici sbloccati: #{s[:total_unlocked]}/#{s[:total_unlockables]}",
         "- Dossier: #{s[:dossier][0]}/#{s[:dossier][1]}",
         "- Galleria: #{s[:galleria][0]}/#{s[:galleria][1]}",
-        "- Armeria: #{s[:armeria][0]}/#{s[:armeria][1]}"
+        "- Armeria: #{s[:armeria][0]}/#{s[:armeria][1]}",
+        "- Mappa: #{s[:mappa][0]}/#{s[:mappa][1]}"
       ]
 
       {
