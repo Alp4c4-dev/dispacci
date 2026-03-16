@@ -213,6 +213,14 @@ class CommandsController < ApplicationController
       lines << "\u0000  - #{visible}"
     end
 
+    # --- Mappa segreta ---
+    if category_cmd == "Mappa"
+      secret_u = Unlockable.find_by(category: "Mappa_Segreta")
+      if secret_u && unlocked_ids.include?(secret_u.id)
+      lines << "\u0000 @@ - #{secret_u.key}@@" # @@ per colore giallo
+      end
+    end
+
     lines
   end
 

@@ -17,6 +17,7 @@ rows = [
   { key: "B3 - Tulipani", category: "Mappa", kind: "text", payload: payload_for.call("unlockables/B3 Tulipani.txt") },
   { key: "B4 - Camelie", category: "Mappa", kind: "text", payload: payload_for.call("unlockables/B4 Camelie.txt") },
   { key: "D1 - Gerani", category: "Mappa", kind: "text", payload: payload_for.call("unlockables/D1 Gerani.txt") },
+  { key: "C3 - Leopardi", category: "Mappa_Segreta", kind: "text", payload: payload_for.call("unlockables/mappa_segreta.txt")},
 
   # ----------------
   # Dossier

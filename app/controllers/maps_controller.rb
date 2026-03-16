@@ -2,7 +2,6 @@ class MapsController < ApplicationController
   before_action :require_login!
 
   def show
-    # Calcola l'immagine iniziale in base ai progressi dell'utente
     @current_map_image = calculate_map_image(current_user)
   end
 
@@ -24,12 +23,31 @@ class MapsController < ApplicationController
         already_unlocked = true
       end
 
+      # --- LOGICA A CASCATA MAPPA SEGRETA ---
+      mappa_count = current_user.user_unlocks.joins(:unlockable).where(unlockables: { category: "Mappa" }).count
+
+      secret_unlocked_now = false
+      secret_payload = nil
+
+      if mappa_count == 3
+        secret_u = Unlockable.find_by(category: "Mappa_Segreta")
+        if secret_u && !current_user.user_unlocks.exists?(unlockable_id: secret_u.id)
+          current_user.user_unlocks.create!(unlockable: secret_u)
+          secret_unlocked_now = true
+          secret_payload = secret_u.payload
+        end
+      end
+
       render json: {
         success: true,
         payload: unlockable.payload,
         already_unlocked: already_unlocked,
-        # Usa lo stesso metodo per generare l'immagine aggiornata
-        new_image_url: calculate_map_image(current_user)
+        # L'immagine a 3 edifici da mostrare subito
+        new_image_url: calculate_map_image(current_user, ignore_secret: true),
+        secret_unlocked: secret_unlocked_now,
+        secret_payload: secret_payload,
+        # L'immagine a 4 edifici da mostrare dopo l'INVIO
+        final_image_url: secret_unlocked_now ? calculate_map_image(current_user) : nil
       }
     else
       render json: {
@@ -41,14 +59,19 @@ class MapsController < ApplicationController
 
   private
 
-  # Metodo isolato che calcola lo stato visivo della mappa per un dato utente
-  def calculate_map_image(user)
-    unlocked_keys = Unlockable.joins(:user_unlocks)
-                              .where("LOWER(category) = ?", "mappa")
-                              .where(user_unlocks: { user_id: user.id })
-                              .pluck(:key)
+  def calculate_map_image(user, ignore_secret: false)
+    unlocked_cats_keys = Unlockable.joins(:user_unlocks)
+                                   .where(user_unlocks: { user_id: user.id })
+                                   .where("LOWER(category) IN (?, ?)", "mappa", "mappa_segreta")
+                                   .pluck(:category, :key)
 
-    coords = unlocked_keys.map { |k| k.downcase.split(" - ").first.strip }
+    has_secret = unlocked_cats_keys.any? { |cat, _| cat.downcase == "mappa_segreta" }
+
+    # Ritorna la mappa finale solo se il segreto c'è e non stiamo chiedendo di ignorarlo
+    return "/media/map/mappa_finale.webp" if has_secret && !ignore_secret
+
+    coords = unlocked_cats_keys.select { |cat, _| cat.downcase == "mappa" }
+                               .map { |_, key| key.downcase.split(" - ").first.strip }
 
     image_suffix = coords.sort.join("_")
     image_suffix = "base" if image_suffix.blank?

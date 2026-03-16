@@ -348,13 +348,16 @@ export default class extends Controller {
   formatTextToHtml(text) {
     if (text == null) return ""
 
-    // 1) Escape HTML (sicurezza: niente tag eseguibili)
+    // escape HTML (sicurezza: niente tag eseguibili)
     const tmp = document.createElement("div")
     tmp.textContent = String(text)
     let safe = tmp.innerHTML
 
-    // 2) Markdown minimo: **grassetto**
+    // markdown minimo: **grassetto**
     safe = safe.replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>")
+
+    // utilizzo colore giallo
+    safe = safe.replace(/@@([\s\S]+?)@@/g, "<span class='secret-text'>$1</span>")
 
     return safe
   }

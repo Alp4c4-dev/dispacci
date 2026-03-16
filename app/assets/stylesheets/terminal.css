@@ -190,6 +190,16 @@
         min-height: 16px;   /* spazio riservato anche quando vuoto */
     }
 
+    .secret-text {
+        color: #ffea00;
+    }
+
+    /* effetto blink */
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
     /* Riga dedicata alla visualizzazione del timer */
     .timer-line {
         color: #0aff0a;
