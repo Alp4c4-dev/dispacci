@@ -24,7 +24,7 @@ class User < ApplicationRecord
     armeria_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: "Armeria" }).count
     armeria_total = Unlockable.where(category: "Armeria").count
 
-    mappa_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: ["Mappa", "Mappa_Segreta"] }).count
+    mappa_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: [ "Mappa", "Mappa_Segreta" ] }).count
     mappa_total = Unlockable.where(category: "Mappa").count
 
     {

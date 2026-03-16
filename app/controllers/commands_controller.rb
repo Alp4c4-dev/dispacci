@@ -370,7 +370,7 @@ class CommandsController < ApplicationController
       parts.map do |part|
         if part.start_with?("IMAGE::")
           url = part.sub("IMAGE::", "").strip
-          { type: "image", url: url}
+          { type: "image", url: url }
         else
           # Assegniamo la chiave interactive solo se il parametro è true
           item = { type: "text", text: part, style: "payload" }

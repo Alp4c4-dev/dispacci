@@ -16,11 +16,12 @@ class MapsController < ApplicationController
                            .first
 
     if unlockable
-      begin
+      # Controllo preventivo: verifichiamo se l'utente ha già questo sblocco
+      already_unlocked = current_user.user_unlocks.exists?(unlockable_id: unlockable.id)
+
+      # Lo creiamo solo se non esiste già
+      unless already_unlocked
         current_user.user_unlocks.create!(unlockable: unlockable)
-        already_unlocked = false
-      rescue ActiveRecord::RecordNotUnique
-        already_unlocked = true
       end
 
       # --- LOGICA A CASCATA MAPPA SEGRETA ---
@@ -29,7 +30,8 @@ class MapsController < ApplicationController
       secret_unlocked_now = false
       secret_payload = nil
 
-      if mappa_count == 3
+      # Sblocca la 4a coordinata SOLO se questa è effettivamente la 3a nuova
+      if mappa_count == 3 && !already_unlocked
         secret_u = Unlockable.find_by(category: "Mappa_Segreta")
         if secret_u && !current_user.user_unlocks.exists?(unlockable_id: secret_u.id)
           current_user.user_unlocks.create!(unlockable: secret_u)
@@ -42,11 +44,10 @@ class MapsController < ApplicationController
         success: true,
         payload: unlockable.payload,
         already_unlocked: already_unlocked,
-        # L'immagine a 3 edifici da mostrare subito
+        mappa_count: mappa_count, # <-- AGGIUNTA QUESTA RIGA
         new_image_url: calculate_map_image(current_user, ignore_secret: true),
         secret_unlocked: secret_unlocked_now,
         secret_payload: secret_payload,
-        # L'immagine a 4 edifici da mostrare dopo l'INVIO
         final_image_url: secret_unlocked_now ? calculate_map_image(current_user) : nil
       }
     else

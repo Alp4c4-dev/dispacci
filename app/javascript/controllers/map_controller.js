@@ -3,6 +3,16 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [ "image", "message", "coordinate", "text" ]
 
+  extractTextOnly(rawText) {
+    if (!rawText) return "";
+
+    // Taglia la stringa al primo [[NEXT]] e prende solo la parte a sinistra (indice 0)
+    const textPart = rawText.split("[[NEXT]]")[0].trim();
+
+    // Converte eventuali a capo testuali in a capo HTML
+    return textPart.replace(/\n/g, "<br>");
+  }
+
   verify(event) {
     event.preventDefault()
 
@@ -21,7 +31,15 @@ export default class extends Controller {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        let msg = data.already_unlocked ? "[ATTENZIONE: coordinate già sbloccate precedentemente]<br>" : "";
+
+        // CASO DOPPIONE: Blocca tutto, niente payload, mostra solo l'avviso
+        if (data.already_unlocked) {
+          this.messageTarget.innerHTML = `<span style="color: #0aff0a;">Coordinata già decodificata e registrata nel sistema.</span><br><br>Inserisci coordinate`;
+          this.coordinateTarget.value = "";
+          this.textTarget.value = "";
+          this.coordinateTarget.focus();
+          return; // Il "return" ferma l'esecuzione: non aggiorna la mappa e non mostra il testo
+        }
 
         // CASO A: Abbiamo appena sbloccato la mappa segreta a cascata
         if (data.secret_unlocked) {
@@ -32,7 +50,7 @@ export default class extends Controller {
           }
 
           // 2. Testo di notifica impostato in giallo (#ffea00)
-          this.messageTarget.innerHTML = `${msg}${data.payload}<br><br><span style="color: #ffea00;">Nuova coordinata sbloccata. Coordinate sbloccate 4/3.<br><br><span style="animation: blink 1s step-end infinite;">[Tocca lo schermo o premi INVIO per visualizzare...]</span></span>`;
+          this.messageTarget.innerHTML = `${this.extractTextOnly(data.payload)}<br><br><span style="color: #ffea00;">Nuova coordinata sbloccata. Coordinate sbloccate 4/3.<br><br><span style="animation: blink 1s step-end infinite;">[Tocca lo schermo o premi INVIO per visualizzare...]</span></span>`;
 
           this.coordinateTarget.value = "";
           this.textTarget.value = "";
@@ -53,7 +71,7 @@ export default class extends Controller {
             }
 
             // Payload segreto impostato in giallo
-            this.messageTarget.innerHTML = `<span style="color: #ffea00;">${data.secret_payload}</span><br><br>Inserisci coordinate`;
+            this.messageTarget.innerHTML = `<span style="color: #ffea00;">${this.extractTextOnly(data.secret_payload)}</span><br><br>Inserisci coordinate`;
 
             this.coordinateTarget.focus();
           };
@@ -63,8 +81,12 @@ export default class extends Controller {
           document.addEventListener("touchstart", proceedHandler, { passive: false });
 
         } else {
-          // CASO B: Comportamento standard (normale inserimento coordinate)
-          this.messageTarget.innerHTML = `${msg}${data.payload}<br><br>Inserisci coordinate`;
+          // CASO B: Comportamento standard (normale inserimento coordinate 1/3, 2/3, 3/3)
+
+          // Costruiamo il messaggio di progresso dinamico
+          let progressMsg = `<span style="color: #0aff0a;">Nuova coordinata sbloccata: ${data.mappa_count}/3</span><br><br>`;
+
+          this.messageTarget.innerHTML = `${progressMsg}${this.extractTextOnly(data.payload)}<br><br>Inserisci coordinate`;
 
           if (data.new_image_url) {
             this.imageTarget.src = data.new_image_url;

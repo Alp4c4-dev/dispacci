@@ -1,11 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  key: MyString
-  kind: MyString
-  payload: MyText
+  key: test_chiave_uno
+  kind: text
+  payload: Contenuto di test uno
 
 two:
-  key: MyString
-  kind: MyString
-  payload: MyText
+  key: test_chiave_due
+  kind: text
+  payload: Contenuto di test due
