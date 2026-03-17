@@ -84,7 +84,7 @@ export default class extends Controller {
           // CASO B: Comportamento standard (normale inserimento coordinate 1/3, 2/3, 3/3)
 
           // Costruiamo il messaggio di progresso dinamico
-          let progressMsg = `<span style="color: #0aff0a;">Nuova coordinata sbloccata: ${data.mappa_count}/3</span><br><br>`;
+          let progressMsg = `<span style="color: #0aff0a;">Nuovo codice sbloccato!<br>Codici sbloccati ${data.total_unlocked}/${data.total_unlockables}<br>Nuova coordinata trovata!<br>Coordinate trovate ${data.mappa_count}/3</span><br><br>`;
 
           this.messageTarget.innerHTML = `${progressMsg}${this.extractTextOnly(data.payload)}<br><br>Inserisci coordinate`;
 

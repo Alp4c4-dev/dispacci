@@ -48,7 +48,9 @@ class MapsController < ApplicationController
         new_image_url: calculate_map_image(current_user, ignore_secret: true),
         secret_unlocked: secret_unlocked_now,
         secret_payload: secret_payload,
-        final_image_url: secret_unlocked_now ? calculate_map_image(current_user) : nil
+        final_image_url: secret_unlocked_now ? calculate_map_image(current_user) : nil,
+        total_unlocked: current_user.user_unlocks.joins(:unlockable).where.not(unlockables: { category: "Mappa_Segreta" }).count,
+        total_unlockables: Unlockable.where.not(category: "Mappa_Segreta").count
       }
     else
       render json: {

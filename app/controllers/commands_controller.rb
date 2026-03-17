@@ -100,7 +100,7 @@ class CommandsController < ApplicationController
     when "coordinate"
       # cerca testo di intro dal database
       sys_payload = SystemPayload.find_by(key: "puzzle_coord_into")
-      items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [{ type: "text", text: "Il Portale contiene 1 informazione critica: le coordinate del nostro prossimo incontro.\nÈ vitale che tu ci sia, ma per ovvie ragioni abbiamo dovuto nascondere luogo e orario. Inseriscili qui quando li avrai trovati.", style: "payload" }]
+      items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Il Portale contiene 1 informazione critica: le coordinate del nostro prossimo incontro.\nÈ vitale che tu ci sia, ma per ovvie ragioni abbiamo dovuto nascondere luogo e orario. Inseriscili qui quando li avrai trovati.", style: "payload" } ]
 
       {
         items: items,
@@ -123,21 +123,21 @@ class CommandsController < ApplicationController
 
       if is_coord_correct && is_time_correct
         sys_payload = SystemPayload.find_by(key: "puzzle_coord_success")
-        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [{ type: "text", text: "Ce l'hai fatta! Questo punto di arrivo può essere il punto di partenza dei Dispacci ed è merito tuo che stai provando questa interazione e sei arrivatə fin qui. Davvero grazie per il tuo tempo! Ne faremo buon uso.", style: "payload" }]
+        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Ce l'hai fatta! Questo punto di arrivo può essere il punto di partenza dei Dispacci ed è merito tuo che stai provando questa interazione e sei arrivatə fin qui. Davvero grazie per il tuo tempo! Ne faremo buon uso.", style: "payload" } ]
         {
           items: items,
-          meta: { action: "close_coordinate_puzzle" } #sblocca terminale
+          meta: { action: "close_coordinate_puzzle" } # sblocca terminale
         }
       elsif is_coord_correct && !is_time_correct
         sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_time")
-        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [{ type: "text", text: "Complimenti! Hai trovato il luogo dell'incontro.", style: "payload" }]
+        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Complimenti! Hai trovato il luogo dell'incontro.", style: "payload" } ]
         { items: items } # non sblocca terminale, aspetta altro input
       elsif !is_coord_correct && is_time_correct
         sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_coord")
-        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [{ type: "text", text: "Complimenti! Hai trovato l'orario dell'incontro.", style: "payload" }]
+        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Complimenti! Hai trovato l'orario dell'incontro.", style: "payload" } ]
         { items: items }
       else
-        { items: [{ type: "text", text: "Dati inseriti errati. Riprovare.", style: "payload" }] }
+        { items: [ { type: "text", text: "Dati inseriti errati. Riprovare.", style: "payload" } ] }
       end
     when "resistenza"
       # --- DATI UTENTE (calcolati in user.rb) ---
@@ -272,8 +272,9 @@ class CommandsController < ApplicationController
 
     created = create_user_unlock_if_needed(unlockable)
     if created
-      count = current_user.user_unlocks.count
-      total = Unlockable.count
+      # esclude il payload della mappa segreta dal conto
+      count = current_user.user_unlocks.joins(:unlockable).where.not(unlockables: { category: "Mappa_Segreta" }).count
+      total = Unlockable.where.not(category: "Mappa_Segreta").count
       lines << "Nuovo codice sbloccato!\nCodici sbloccati: #{count}/#{total}."
       lines.concat(category_unlock_message_lines(unlockable.category))
     end
