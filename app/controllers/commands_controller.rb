@@ -98,44 +98,74 @@ class CommandsController < ApplicationController
         "- whoami"
       ]
     when "coordinate"
-      # cerca testo di intro dal database
-      sys_payload = SystemPayload.find_by(key: "puzzle_coord_into")
+      sys_payload = SystemPayload.find_by(key: "puzzle_coord_intro")
       items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Il Portale contiene 1 informazione critica: le coordinate del nostro prossimo incontro.\nÈ vitale che tu ci sia, ma per ovvie ragioni abbiamo dovuto nascondere luogo e orario. Inseriscili qui quando li avrai trovati.", style: "payload" } ]
 
       {
         items: items,
-        meta: { action: "start_coordinate_puzzle" } # comunica al fronted di avviare il modulo
+        meta: {
+          action: "start_coordinate_puzzle",
+          # Passiamo al frontend i dati solo se l'utente li ha già indovinati
+          solved_coord: session[:puzzle_coord_solved] ? { xy: "C3", testo: "Leopardi" } : nil,
+          solved_time: session[:puzzle_time_solved] ? { orario: "23:59" } : nil
+        }
       }
-
     when "verify_coordinate_puzzle"
       pd = params[:puzzle_data] || {}
-      xy = pd[:xy].to_s.strip.downcase
-      testo = pd[:testo].to_s.strip.downcase
-      orario = pd[:orario].to_s.strip
+      guess_type = pd[:guess_type] # riceve 'coord' o 'time' dal frontend
 
-      # valori hardcoded
       expected_xy = "c3"
       expected_testo = "leopardi"
       expected_orario = "23:59"
 
-      is_coord_correct = (xy == expected_xy && testo == expected_testo)
-      is_time_correct = (orario == expected_orario)
+      is_correct = false
 
-      if is_coord_correct && is_time_correct
-        sys_payload = SystemPayload.find_by(key: "puzzle_coord_success")
-        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Ce l'hai fatta! Questo punto di arrivo può essere il punto di partenza dei Dispacci ed è merito tuo che stai provando questa interazione e sei arrivatə fin qui. Davvero grazie per il tuo tempo! Ne faremo buon uso.", style: "payload" } ]
-        {
-          items: items,
-          meta: { action: "close_coordinate_puzzle" } # sblocca terminale
-        }
-      elsif is_coord_correct && !is_time_correct
-        sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_time")
-        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Complimenti! Hai trovato il luogo dell'incontro.", style: "payload" } ]
-        { items: items } # non sblocca terminale, aspetta altro input
-      elsif !is_coord_correct && is_time_correct
-        sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_coord")
-        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Complimenti! Hai trovato l'orario dell'incontro.", style: "payload" } ]
-        { items: items }
+      if guess_type == "coord"
+        xy = pd[:xy].to_s.strip.downcase
+        testo = pd[:testo].to_s.strip.downcase
+        if xy == expected_xy && testo == expected_testo
+          is_correct = true
+          session[:puzzle_coord_solved] = true
+        end
+      elsif guess_type == "time"
+        orario = pd[:orario].to_s.strip
+        if orario == expected_orario
+          is_correct = true
+          session[:puzzle_time_solved] = true
+        end
+      end
+
+      if is_correct
+        # Se ENTRAMBI i sistemi sono stati risolti (secondo step)
+        if session[:puzzle_coord_solved] && session[:puzzle_time_solved]
+
+          # 1) Prende il messaggio parziale relativo a quello che ha appena inserito
+          partial_key = guess_type == "coord" ? "puzzle_coord_partial_time" : "puzzle_coord_partial_coord"
+          partial_fallback = guess_type == "coord" ? "Complimenti! Hai trovato il luogo dell'incontro." : "Complimenti! Hai trovato l'orario dell'incontro."
+          partial_payload = SystemPayload.find_by(key: partial_key)
+          items = partial_payload ? render_generic_items(partial_payload.kind, partial_payload.payload) : [ { type: "text", text: partial_fallback, style: "payload" } ]
+
+          # 2) Ci accoda il messaggio finale di completamento
+          success_payload = SystemPayload.find_by(key: "puzzle_coord_success")
+          success_fallback = "Ce l'hai fatta! Questo punto di arrivo può essere il punto di partenza dei Dispacci ed è merito tuo che stai provando questa interazione e sei arrivatə fin qui. Davvero grazie per il tuo tempo! Ne faremo buon uso."
+          success_items = success_payload ? render_generic_items(success_payload.kind, success_payload.payload) : [ { type: "text", text: success_fallback, style: "payload" } ]
+
+          {
+            items: items + success_items,
+            meta: { action: "close_coordinate_puzzle" }
+          }
+        else
+          # Se ha risolto SOLO il primo dei due (primo step)
+          if guess_type == "coord"
+            sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_time")
+            items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Complimenti! Hai trovato il luogo dell'incontro.", style: "payload" } ]
+            { items: items, meta: { action: "lock_coord_inputs" } }
+          else
+            sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_coord")
+            items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Complimenti! Hai trovato l'orario dell'incontro.", style: "payload" } ]
+            { items: items, meta: { action: "lock_time_inputs" } }
+          end
+        end
       else
         { items: [ { type: "text", text: "Dati inseriti errati. Riprovare.", style: "payload" } ] }
       end

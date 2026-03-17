@@ -842,7 +842,8 @@ export default class extends Controller {
         }
 
         if (data.meta.action == "start_coordinate_puzzle") {
-          this.renderCoordinatePuzzle()
+          // Passiamo l'intero oggetto meta per leggere eventuali campi già risolti
+          this.renderCoordinatePuzzle(data.meta)
           return
         }
       }
@@ -871,30 +872,31 @@ export default class extends Controller {
     await this.handleCommand(command)
   }
 
-  renderCoordinatePuzzle() {
+  renderCoordinatePuzzle(meta_data = {}) {
     this.promptTarget.disabled = true;
 
     const container = document.createElement("div");
     container.className = "puzzle-container line no-prompt";
 
-    // Layout ereditato dalle classi CSS della mappa (terminal.css)
+    // Niente più id="...", usiamo classi specifiche (es. puzzle-xy) aggiunte a quelle estetiche
     container.innerHTML = `
       <div class="map-form" style="margin-top: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
 
-        <div style="display: flex; gap: 15px;">
-          <input type="text" id="puzzle-xy" class="input-coord" placeholder="XY" maxlength="2" autocomplete="off">
-          <input type="text" id="puzzle-testo" class="input-text" placeholder="Testo decodificato" autocomplete="off" style="min-width: 220px;">
+        <div class="map-actions" style="margin: 0; gap: 15px; align-items: center; width: 100%;">
+          <input type="text" class="input-coord puzzle-xy" placeholder="XY" maxlength="2" autocomplete="off">
+          <input type="text" class="input-text puzzle-testo" placeholder="Testo decodificato" autocomplete="off" style="width: 220px; flex-grow: 0;">
+          <button class="btn-confirm puzzle-submit-coord" style="margin: 0;">INVIO</button>
         </div>
 
-        <div style="display: flex; gap: 5px; align-items: center;">
-          <input type="text" id="puzzle-ora" class="input-coord" placeholder="HH" maxlength="2" autocomplete="off">
+        <div class="map-actions" style="margin: 0; gap: 5px; align-items: center; width: 100%;">
+          <input type="text" class="input-coord puzzle-ora" placeholder="HH" maxlength="2" autocomplete="off">
           <span style="font-family: monospace; font-size: 20px; font-weight: bold; color: inherit;">:</span>
-          <input type="text" id="puzzle-minuti" class="input-coord" placeholder="MM" maxlength="2" autocomplete="off">
+          <input type="text" class="input-coord puzzle-minuti" placeholder="MM" maxlength="2" autocomplete="off">
+          <button class="btn-confirm puzzle-submit-time" style="margin: 0; margin-left: 10px;">INVIO</button>
         </div>
 
         <div class="map-actions" style="margin-top: 5px; justify-content: flex-start; width: 100%;">
-          <button id="puzzle-submit" class="btn-confirm">Conferma</button>
-          <button id="puzzle-cancel" class="btn-exit">Esci</button>
+          <button class="btn-exit puzzle-cancel">ESCI</button>
         </div>
 
       </div>
@@ -903,45 +905,86 @@ export default class extends Controller {
     this.screenTarget.appendChild(container);
     this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
 
-    document.getElementById("puzzle-submit").addEventListener("click", () => this.submitCoordinatePuzzle());
-    document.getElementById("puzzle-cancel").addEventListener("click", () => this.closeCoordinatePuzzle(true));
+    // --- PRE-COMPILAZIONE DEI DATI SALVATI ---
+    if (meta_data.solved_coord) {
+      container.querySelector(".puzzle-xy").value = meta_data.solved_coord.xy;
+      container.querySelector(".puzzle-testo").value = meta_data.solved_coord.testo;
+      container.querySelector(".puzzle-xy").disabled = true;
+      container.querySelector(".puzzle-testo").disabled = true;
+      container.querySelector(".puzzle-submit-coord").disabled = true;
+    }
 
-    setTimeout(() => document.getElementById("puzzle-xy").focus(), 20);
+    if (meta_data.solved_time) {
+      const [hh, mm] = meta_data.solved_time.orario.split(":");
+      container.querySelector(".puzzle-ora").value = hh;
+      container.querySelector(".puzzle-minuti").value = mm;
+      container.querySelector(".puzzle-ora").disabled = true;
+      container.querySelector(".puzzle-minuti").disabled = true;
+      container.querySelector(".puzzle-submit-time").disabled = true;
+    }
+
+    // Usiamo container.querySelector per pescare i pulsanti di QUESTO specifico blocco
+    // Inoltre, passiamo "container" alla funzione di submit per farle leggere gli input giusti
+    container.querySelector(".puzzle-submit-coord").addEventListener("click", () => this.submitCoordinatePuzzle(container, 'coord'));
+    container.querySelector(".puzzle-submit-time").addEventListener("click", () => this.submitCoordinatePuzzle(container, 'time'));
+    container.querySelector(".puzzle-cancel").addEventListener("click", () => this.closeCoordinatePuzzle(true));
+
+    // Focus intelligente: se le coordinate sono già state indovinate, sposta il cursore sull'orario
+    setTimeout(() => {
+      if (meta_data.solved_coord && !meta_data.solved_time) {
+        container.querySelector(".puzzle-ora").focus();
+      } else if (!meta_data.solved_coord) {
+        container.querySelector(".puzzle-xy").focus();
+      }
+    }, 20);
   }
 
-  async submitCoordinatePuzzle() {
-    const xy = document.getElementById("puzzle-xy").value.trim();
-    const testo = document.getElementById("puzzle-testo").value.trim();
+  // Ora la funzione accetta il 'container' come parametro per sapere in quale blocco cercare
+  async submitCoordinatePuzzle(container, guessType) {
+    let puzzleData = { guess_type: guessType };
 
-    // Peschiamo ore e minuti separatamente
-    const ora = document.getElementById("puzzle-ora").value.trim();
-    const minuti = document.getElementById("puzzle-minuti").value.trim();
-
-    // Li uniamo nel formato "HH:MM" che il server si aspetta (es. "23:59")
-    const orario = `${ora}:${minuti}`;
+    if (guessType === 'coord') {
+      puzzleData.xy = container.querySelector(".puzzle-xy").value.trim();
+      puzzleData.testo = container.querySelector(".puzzle-testo").value.trim();
+    } else {
+      const ora = container.querySelector(".puzzle-ora").value.trim();
+      const minuti = container.querySelector(".puzzle-minuti").value.trim();
+      puzzleData.orario = `${ora}:${minuti}`;
+    }
 
     const { ok, data } = await this.postJSON("/commands", {
       command: "verify_coordinate_puzzle",
-      puzzle_data: { xy, testo, orario }
+      puzzle_data: puzzleData
     });
 
-    // ... (il resto della funzione rimane identico)
     if (ok && data && data.ok) {
-      // Invia la stampa dell'esito (con effetto Typewriter) in coda
       await this.enqueuePrint(async () => {
         if (Array.isArray(data.items) && data.items.length > 0) {
           await this.printItemsTypewriter(data.items, { charDelay: 10, lineDelay: 140 });
-        } else {
+        } else if (data.lines) {
           const lines = this.extractTextLines(data);
           await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 });
         }
       });
 
-      // Se il server autorizza la chiusura (successo totale), chiude l'interfaccia
-      if (data.meta && data.meta.action === "close_coordinate_puzzle") {
-        this.closeCoordinatePuzzle(false);
+      // Usa container.querySelector anche qui per bloccare solo i campi di questo tentativo
+      if (data.meta) {
+        if (data.meta.action === "lock_coord_inputs") {
+          container.querySelector(".puzzle-xy").disabled = true;
+          container.querySelector(".puzzle-testo").disabled = true;
+          container.querySelector(".puzzle-submit-coord").disabled = true;
+          container.querySelector(".puzzle-ora").focus();
+          this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
+        } else if (data.meta.action === "lock_time_inputs") {
+          container.querySelector(".puzzle-ora").disabled = true;
+          container.querySelector(".puzzle-minuti").disabled = true;
+          container.querySelector(".puzzle-submit-time").disabled = true;
+          container.querySelector(".puzzle-xy").focus();
+          this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
+        } else if (data.meta.action === "close_coordinate_puzzle") {
+          this.closeCoordinatePuzzle(false);
+        }
       } else {
-        // Altrimenti la lascia aperta e fa uno scroll verso il basso per correggere
         this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
       }
     } else {
