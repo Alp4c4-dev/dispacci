@@ -97,6 +97,48 @@ class CommandsController < ApplicationController
         "- ping",
         "- whoami"
       ]
+    when "coordinate"
+      # cerca testo di intro dal database
+      sys_payload = SystemPayload.find_by(key: "puzzle_coord_into")
+      items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [{ type: "text", text: "Il Portale contiene 1 informazione critica: le coordinate del nostro prossimo incontro.\nÈ vitale che tu ci sia, ma per ovvie ragioni abbiamo dovuto nascondere luogo e orario. Inseriscili qui quando li avrai trovati.", style: "payload" }]
+
+      {
+        items: items,
+        meta: { action: "start_coordinate_puzzle" } # comunica al fronted di avviare il modulo
+      }
+
+    when "verify_coordinate_puzzle"
+      pd = params[:puzzle_data] || {}
+      xy = pd[:xy].to_s.strip.downcase
+      testo = pd[:testo].to_s.strip.downcase
+      orario = pd[:orario].to_s.strip
+
+      # valori hardcoded
+      expected_xy = "c3"
+      expected_testo = "leopardi"
+      expected_orario = "23:59"
+
+      is_coord_correct = (xy == expected_xy && testo == expected_testo)
+      is_time_correct = (orario == expected_orario)
+
+      if is_coord_correct && is_time_correct
+        sys_payload = SystemPayload.find_by(key: "puzzle_coord_success")
+        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [{ type: "text", text: "Ce l'hai fatta! Questo punto di arrivo può essere il punto di partenza dei Dispacci ed è merito tuo che stai provando questa interazione e sei arrivatə fin qui. Davvero grazie per il tuo tempo! Ne faremo buon uso.", style: "payload" }]
+        {
+          items: items,
+          meta: { action: "close_coordinate_puzzle" } #sblocca terminale
+        }
+      elsif is_coord_correct && !is_time_correct
+        sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_time")
+        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [{ type: "text", text: "Complimenti! Hai trovato il luogo dell'incontro.", style: "payload" }]
+        { items: items } # non sblocca terminale, aspetta altro input
+      elsif !is_coord_correct && is_time_correct
+        sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_coord")
+        items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [{ type: "text", text: "Complimenti! Hai trovato l'orario dell'incontro.", style: "payload" }]
+        { items: items }
+      else
+        { items: [{ type: "text", text: "Dati inseriti errati. Riprovare.", style: "payload" }] }
+      end
     when "resistenza"
       # --- DATI UTENTE (calcolati in user.rb) ---
       s = current_user.stats

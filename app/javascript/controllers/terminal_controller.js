@@ -830,7 +830,7 @@ export default class extends Controller {
         this.printSpacerLine()
       })
 
-      // gestione timer
+      // gestione timer ed enigmi
       if (data.meta) {
         if (data.meta.action === "start_timer") {
           this.startTimer()
@@ -839,6 +839,11 @@ export default class extends Controller {
         if (data.meta.action === "stop_timer") {
           // Passiamo i secondi calcolati dal server alla funzione stopTimer
           this.stopTimer(data.meta.donated_seconds)
+        }
+
+        if (data.meta.action == "start_coordinate_puzzle") {
+          this.renderCoordinatePuzzle()
+          return
         }
       }
 
@@ -864,5 +869,102 @@ export default class extends Controller {
     const command = this.promptTarget.value.trim()
     this.promptTarget.value = ""
     await this.handleCommand(command)
+  }
+
+  renderCoordinatePuzzle() {
+    this.promptTarget.disabled = true;
+
+    const container = document.createElement("div");
+    container.className = "puzzle-container line no-prompt";
+
+    // Layout ereditato dalle classi CSS della mappa (terminal.css)
+    container.innerHTML = `
+      <div class="map-form" style="margin-top: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+
+        <div style="display: flex; gap: 15px;">
+          <input type="text" id="puzzle-xy" class="input-coord" placeholder="XY" maxlength="2" autocomplete="off">
+          <input type="text" id="puzzle-testo" class="input-text" placeholder="Testo decodificato" autocomplete="off" style="min-width: 220px;">
+        </div>
+
+        <div style="display: flex; gap: 5px; align-items: center;">
+          <input type="text" id="puzzle-ora" class="input-coord" placeholder="HH" maxlength="2" autocomplete="off">
+          <span style="font-family: monospace; font-size: 20px; font-weight: bold; color: inherit;">:</span>
+          <input type="text" id="puzzle-minuti" class="input-coord" placeholder="MM" maxlength="2" autocomplete="off">
+        </div>
+
+        <div class="map-actions" style="margin-top: 5px; justify-content: flex-start; width: 100%;">
+          <button id="puzzle-submit" class="btn-confirm">Conferma</button>
+          <button id="puzzle-cancel" class="btn-exit">Esci</button>
+        </div>
+
+      </div>
+    `;
+
+    this.screenTarget.appendChild(container);
+    this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
+
+    document.getElementById("puzzle-submit").addEventListener("click", () => this.submitCoordinatePuzzle());
+    document.getElementById("puzzle-cancel").addEventListener("click", () => this.closeCoordinatePuzzle(true));
+
+    setTimeout(() => document.getElementById("puzzle-xy").focus(), 20);
+  }
+
+  async submitCoordinatePuzzle() {
+    const xy = document.getElementById("puzzle-xy").value.trim();
+    const testo = document.getElementById("puzzle-testo").value.trim();
+
+    // Peschiamo ore e minuti separatamente
+    const ora = document.getElementById("puzzle-ora").value.trim();
+    const minuti = document.getElementById("puzzle-minuti").value.trim();
+
+    // Li uniamo nel formato "HH:MM" che il server si aspetta (es. "23:59")
+    const orario = `${ora}:${minuti}`;
+
+    const { ok, data } = await this.postJSON("/commands", {
+      command: "verify_coordinate_puzzle",
+      puzzle_data: { xy, testo, orario }
+    });
+
+    // ... (il resto della funzione rimane identico)
+    if (ok && data && data.ok) {
+      // Invia la stampa dell'esito (con effetto Typewriter) in coda
+      await this.enqueuePrint(async () => {
+        if (Array.isArray(data.items) && data.items.length > 0) {
+          await this.printItemsTypewriter(data.items, { charDelay: 10, lineDelay: 140 });
+        } else {
+          const lines = this.extractTextLines(data);
+          await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 });
+        }
+      });
+
+      // Se il server autorizza la chiusura (successo totale), chiude l'interfaccia
+      if (data.meta && data.meta.action === "close_coordinate_puzzle") {
+        this.closeCoordinatePuzzle(false);
+      } else {
+        // Altrimenti la lascia aperta e fa uno scroll verso il basso per correggere
+        this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
+      }
+    } else {
+      this.printLine("Errore di connessione.", "error-text");
+    }
+  }
+
+  closeCoordinatePuzzle(isCancel) {
+    const container = this.screenTarget.querySelector(".puzzle-container");
+    if (container) {
+      // "Congela" il form a schermo ma lo disabilita, così resta visibile nello storico
+      const elements = container.querySelectorAll("input, button");
+      elements.forEach(el => el.disabled = true);
+      container.classList.remove("puzzle-container");
+    }
+
+    if (isCancel) {
+      this.printLine("Operazione annullata.", "error-text");
+    }
+
+    this.printSpacerLine();
+    this.printReadyPrompt();
+    this.promptTarget.disabled = false;
+    setTimeout(() => this.promptTarget.focus(), 20);
   }
 }
