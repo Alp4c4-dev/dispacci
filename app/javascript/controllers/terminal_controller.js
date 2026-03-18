@@ -751,48 +751,17 @@ export default class extends Controller {
     const input = raw.trim()
     if (!input) return
 
-    // 1) Modalità "awaiting" (per definizioni)
-    if (this.awaiting && this.awaiting.kind === "definition") {
-      const definition = input
-
-      // Mostra a schermo quello che l'utente ha scritto (senza "/")
-      this.printLine(definition)
-
-      // Salva la definizione sul server
-      const { ok, data } = await this.postJSON("/definitions", {
-        word: this.awaiting.word,
-        definition
-      })
-
-      // Gestione esito
-      if (ok && data && data.ok) {
-        const name = this.currentUser?.username || "Ribelle"
-        this.printLine("Grazie " + name + "! Messaggio ricevuto. Adesso tocca a noi diffonderlo")
-      } else if (!ok && data && data.error === "Non autenticato") {
-        this.printLine("Sessione scaduta. Torno al login.")
-        this.resetToLogin()
-        return
-      } else {
-        this.printLine("Errore: " + (data?.error || "impossibile salvare"))
-      }
-
-      // Esci dalla modalità awaiting e torna al prompt
-      this.awaiting = null
-      this.printReadyPrompt()
-      return
-    }
-
-    // 2) Eco a schermo
+    // eco a schermo
     this.printLine("/" + input)
 
-    // 3) Logout
+    // logout
     if (input === "logout") {
       await this.deleteJSON("/logout")
       this.resetToLogin()
       return
     }
 
-    // 4) Se il timer è attivo, blocchiamo tutto TRANNE il comando "stop"
+    // se il timer è attivo, blocchiamo tutto TRANNE il comando "stop"
     // Questo permette a "stop" di scendere giù e chiamare il server.
     if (this.timerActive && input.toLowerCase() !== "stop") {
       this.timerWarningCount++
@@ -808,7 +777,7 @@ export default class extends Controller {
       return // Blocca l'esecuzione qui
     }
 
-    // 5) COMANDI SERVER-SIDE GENERICI (/commands)
+    // COMANDI SERVER-SIDE GENERICI (/commands)
     const { ok, data } = await this.postJSON("/commands", { command: input })
 
     // Non autenticato: comportamento coerente ovunque
@@ -827,7 +796,11 @@ export default class extends Controller {
           const lines = this.extractTextLines(data)
           await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 })
         }
-        this.printSpacerLine()
+
+        // Evita di stampare lo spazio vuoto se stiamo aprendo un modulo (definizioni o coordinate)
+        if (!data.awaiting && !(data.meta && data.meta.action === "start_coordinate_puzzle")) {
+          this.printSpacerLine()
+        }
       })
 
       // gestione timer ed enigmi
@@ -848,8 +821,9 @@ export default class extends Controller {
         }
       }
 
-      if (data.awaiting) {
-        this.awaiting = data.awaiting
+      if (data.awaiting && data.awaiting.kind === "definition") {
+        // Avvia il modulo dedicato per inserire la definizione
+        this.renderDefinitionInput(data.awaiting.word)
         return
       }
 
@@ -872,11 +846,99 @@ export default class extends Controller {
     await this.handleCommand(command)
   }
 
+  renderDefinitionInput(word) {
+    this.promptTarget.disabled = true;
+
+    const container = document.createElement("div");
+    container.className = "definition-container line no-prompt";
+
+    // Annulla il pre-wrap ereditato dalla classe .line, permettendo di formattare il codice su più righe
+    container.style.whiteSpace = "normal";
+
+    container.innerHTML = `
+      <div class="map-form" style="margin-top: 5px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+
+        <div style="width: 100%; max-width: 500px;">
+          <textarea class="input-text def-input" placeholder="Scrivi qui la tua definizione..." rows="4" style="width: 100%; resize: vertical; padding: 10px;"></textarea>
+        </div>
+
+        <div class="map-actions" style="margin: 0; justify-content: flex-start; gap: 10px; width: 100%;">
+          <button class="btn-confirm def-submit" style="margin: 0;">INVIA</button>
+          <button class="btn-exit def-cancel">ANNULLA</button>
+        </div>
+
+      </div>
+    `;
+
+    this.screenTarget.appendChild(container);
+    this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
+
+    container.querySelector(".def-submit").addEventListener("click", () => this.submitDefinition(container, word));
+    container.querySelector(".def-cancel").addEventListener("click", () => this.cancelDefinition(container));
+
+    setTimeout(() => container.querySelector(".def-input").focus(), 20);
+  }
+
+  async submitDefinition(container, word) {
+    const textarea = container.querySelector(".def-input");
+    const definition = textarea.value.trim();
+
+    // Se l'utente clicca invio senza scrivere nulla, non facciamo nulla
+    if (!definition) return;
+
+    // Disabilita i campi per impedire doppi invii
+    textarea.disabled = true;
+    container.querySelectorAll("button").forEach(b => b.disabled = true);
+
+    // Rimuove la classe per "sganciarlo" e non creare conflitti futuri
+    container.classList.remove("definition-container");
+
+    // Eco visivo della definizione
+    this.printLine(definition);
+
+    const { ok, data } = await this.postJSON("/definitions", {
+      word: word,
+      definition: definition
+    });
+
+    if (ok && data && data.ok) {
+      const name = this.currentUser?.username || "Ribelle";
+      this.printLine("Grazie " + name + "! Messaggio ricevuto. Adesso tocca a noi diffonderlo.");
+    } else if (!ok && data && data.error === "Non autenticato") {
+      this.printLine("Sessione scaduta. Torno al login.");
+      this.resetToLogin();
+      return;
+    } else {
+      this.printLine("Errore: " + (data?.error || "Impossibile salvare."), "error-text");
+    }
+
+    this.printSpacerLine();
+    this.printReadyPrompt();
+    this.promptTarget.disabled = false;
+    setTimeout(() => this.promptTarget.focus(), 20);
+  }
+
+  cancelDefinition(container) {
+    // Disabilita i campi e li lascia nello storico
+    container.querySelector(".def-input").disabled = true;
+    container.querySelectorAll("button").forEach(b => b.disabled = true);
+    container.classList.remove("definition-container");
+
+    this.printLine("Inserimento annullato.", "error-text");
+    this.printSpacerLine();
+    this.printReadyPrompt();
+    this.promptTarget.disabled = false;
+    setTimeout(() => this.promptTarget.focus(), 20);
+  }
+
   renderCoordinatePuzzle(meta_data = {}) {
     this.promptTarget.disabled = true;
 
     const container = document.createElement("div");
     container.className = "puzzle-container line no-prompt";
+
+    // Annulla il pre-wrap ereditato dalla classe .line, permettendo di formattare il codice su più righe
+    container.style.whiteSpace = "normal";
 
     // Niente più id="...", usiamo classi specifiche (es. puzzle-xy) aggiunte a quelle estetiche
     container.innerHTML = `
