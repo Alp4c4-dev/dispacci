@@ -35,7 +35,7 @@ class User < ApplicationRecord
 
       # Contatori totali
       total_unlocked: user_unlocks.count,
-      total_unlockables: Unlockable.count,
+      total_unlockables: Unlockable.where.not(unlockables: { category: "Mappa_Segreta" }).count,
 
       # Dettagli categorie (Array [sbloccati, totali])
       dossier: [ dossier_unlocked, dossier_total ],
