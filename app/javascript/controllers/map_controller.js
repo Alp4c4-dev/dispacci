@@ -49,8 +49,11 @@ export default class extends Controller {
             this.imageTarget.src = data.new_image_url;
           }
 
-          // 2. Testo di notifica impostato in giallo (#ffea00)
-          this.messageTarget.innerHTML = `${this.extractTextOnly(data.payload)}<br><br><span style="color: #ffea00;">Nuova coordinata sbloccata. Coordinate sbloccate 4/3.<br><br><span style="animation: blink 1s step-end infinite;">[Tocca lo schermo o premi INVIO per visualizzare...]</span></span>`;
+          // 2. Costruiamo il messaggio di progresso dinamico
+          let progressMsg = `<span style="color: #0aff0a;">Nuovo codice sbloccato!<br>Codici sbloccati ${data.total_unlocked}/${data.total_unlockables}<br>Nuova coordinata trovata!<br>Coordinate trovate ${data.mappa_count}/3</span><br><br>`;
+
+          // testo di notifica impostato in giallo (#ffea00) e payload in bianco
+          this.messageTarget.innerHTML = `${progressMsg}<span style="color: #ffffff;">${this.extractTextOnly(data.payload)}</span><br><br><span style="color: #ffea00;">Nuova coordinata sbloccata. Coordinate sbloccate 4/3.<br><br><span style="animation: blink 1s step-end infinite;">[Tocca lo schermo o premi INVIO per visualizzare...]</span></span>`;
 
           this.coordinateTarget.value = "";
           this.textTarget.value = "";
@@ -86,7 +89,7 @@ export default class extends Controller {
           // Costruiamo il messaggio di progresso dinamico
           let progressMsg = `<span style="color: #0aff0a;">Nuovo codice sbloccato!<br>Codici sbloccati ${data.total_unlocked}/${data.total_unlockables}<br>Nuova coordinata trovata!<br>Coordinate trovate ${data.mappa_count}/3</span><br><br>`;
 
-          this.messageTarget.innerHTML = `${progressMsg}${this.extractTextOnly(data.payload)}<br><br>Inserisci coordinate`;
+          this.messageTarget.innerHTML = `${progressMsg}<span style="color: #ffffff;">${this.extractTextOnly(data.payload)}</span><br><br>Inserisci coordinate`;
 
           if (data.new_image_url) {
             this.imageTarget.src = data.new_image_url;

@@ -44,7 +44,7 @@ class MapsController < ApplicationController
         success: true,
         payload: unlockable.payload,
         already_unlocked: already_unlocked,
-        mappa_count: mappa_count, # <-- AGGIUNTA QUESTA RIGA
+        mappa_count: mappa_count,
         new_image_url: calculate_map_image(current_user, ignore_secret: true),
         secret_unlocked: secret_unlocked_now,
         secret_payload: secret_payload,
