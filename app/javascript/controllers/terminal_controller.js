@@ -863,8 +863,8 @@ export default class extends Controller {
         </div>
 
         <div class="map-actions" style="margin: 0; justify-content: flex-start; gap: 10px; width: 100%;">
-          <button class="btn-confirm def-submit" style="margin: 0;">INVIA</button>
-          <button class="btn-exit def-cancel">ANNULLA</button>
+          <button class="btn-confirm def-submit" style="margin: 0;">INVIO</button>
+          <button class="btn-exit def-cancel">ESCI</button>
         </div>
 
       </div>
