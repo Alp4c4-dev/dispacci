@@ -1,7 +1,11 @@
 Il 2001 è l'anno in cui viviamo ma nessuno lo sa. I più lo chiamano anno n, per ora.
-Dieci anni fa, in seguito a un decreto, il sistema di datazione ennemeno (n-) ha sostituito ufficialmente il Calendario Lunare (CL) precedentemente adottato. L'utilizzo di n- era comunque già diffuso sia nella popolazione, che negli atti pubblici e l'origine di tale sistema di datazione va rintracciata nella funzione 'Accadde n anni fa', introdotta dalla piattaforma *T*, fin dai suoi primi sviluppi.
 
-Ennemeno è un sistema di datazione relativo, che serve a confondere passato, presente e futuro. 
-Di anno in anno, siamo sempre più disorientati e non sappiamo dove ci troviamo nell'asse del tempo: gli eventi passati e futuri cambiano la loro collocazione di continuo, fino a perderla del tutto. Così è molto più semplice, per loro, manipolare la storia. Noi, però, non dimentichiamo nulla: per ribellarci abbiamo bisogno di sapere dove siamo e in che anno viviamo.
+Dieci anni fa, in seguito a un decreto, il sistema di datazione ennemeno (n-) ha sostituito ufficialmente il Calendario Lunare (CL), adottato in precedenza. Il sistema n- era comunque già diffuso sia nella popolazione, che negli atti pubblici.
+L'origine di tale sistema di datazione va rintracciata nella funzione 'Accadde n anni fa', introdotta dalla piattaforma *T*, fin dalle sue prime versioni. 
 
-Nei Dispacci ci sono date riportate nel formato 'n-x': inserisci nel Portale il corrispondente anno lunare, per recuperare un pezzo di storia.
+Ennemeno è un sistema di datazione relativo, che contribuisce a far perdere il senso del tempo. 
+Con questo sistema, gli eventi passati e futuri cambiano la loro collocazione di continuo, fino a perderla del tutto.
+
+Noi, però, non dimentichiamo nulla. Conoscere il tempo in cui viviamo è il minimo indispensabile per opporci al corso degli eventi.
+
+I Dispacci presentano date nel formato 'n-x': inserisci nel Portale l'anno lunare corrispondente, per recuperare un pezzo di storia.

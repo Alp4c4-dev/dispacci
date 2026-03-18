@@ -331,18 +331,35 @@ export default class extends Controller {
     setTimeout(() => this.promptTarget.focus(), 20)
   }
 
-  bootTerminal() {
-    const name = this.currentUser ? this.currentUser.username : "Ribelle"
+  async bootTerminal() {
+    // Disabilitiamo temporaneamente il prompt mentre il server risponde e mentre stampa
+    this.promptTarget.disabled = true;
 
-    if (this.firstTime) {
-      this.printLine("Ciao " + name + ", benvenutə nel Portale! \n\nQuesta è la nostra base digitale: il punto dell'internet in cui ci siamo rifugiati per tenere viva la Resistenza.\nDa adesso ne fai parte.\n\nUsa le parole chiave che trovi nel Volume 0 per accedere ai contenuti extra e aiutarci davvero.\n\nUn unico avvertimento: navigando questo nero in solitudine ci si potrebbe smarrire e convincere di essere insignificanti, ma è tutto il contrario.\n\nOgni tua azione, che ti piaccia o meno, cambierà per sempre la storia di questa Resistenza.")
+    // Scegliamo quale "comando ombra" inviare in base al firstTime
+    const bootCmd = this.firstTime ? "sys_boot_first" : "sys_boot_standard";
+    const { ok, data } = await this.postJSON("/commands", { command: bootCmd });
 
-      this.printLine("Portale avviato.")
-      this.printReadyPrompt()
+    if (ok && data && data.ok) {
+      await this.enqueuePrint(async () => {
+        if (Array.isArray(data.items) && data.items.length > 0) {
+          await this.printItemsTypewriter(data.items, { charDelay: 10, lineDelay: 140 });
+        } else {
+          const lines = this.extractTextLines(data);
+          await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 });
+        }
+      });
     } else {
-      this.printLine("Ciao " + name + ". Portale avviato.")
-      this.printReadyPrompt()
+      // Fallback locale in caso di errore di rete
+      const name = this.currentUser ? this.currentUser.username : "Ribelle";
+      this.printLine(this.firstTime ? `Ciao ${name}, benvenutə nel Portale!` : `Ciao ${name}. Portale avviato.`);
     }
+
+    // A coda di stampa terminata, stampiamo il prompt verde e riattiviamo l'input
+    await this.enqueuePrint(async () => {
+      this.printReadyPrompt();
+      this.promptTarget.disabled = false;
+      this.promptTarget.focus();
+    });
   }
 
   formatTextToHtml(text) {
@@ -903,7 +920,7 @@ export default class extends Controller {
 
     if (ok && data && data.ok) {
       const name = this.currentUser?.username || "Ribelle";
-      this.printLine("Grazie " + name + "! Messaggio ricevuto. Adesso tocca a noi diffonderlo.");
+      this.printLine("Grazie " + name + "! Messaggio ricevuto. La somma delle definizioni di ognunə ci restituirà un concetto... ne parliamo nel prossimo volume.");
     } else if (!ok && data && data.error === "Non autenticato") {
       this.printLine("Sessione scaduta. Torno al login.");
       this.resetToLogin();

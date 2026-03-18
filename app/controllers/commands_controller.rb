@@ -97,6 +97,41 @@ class CommandsController < ApplicationController
         "- ping",
         "- whoami"
       ]
+    when "esplicite"
+      sys_payload = SystemPayload.find_by(key: "esplicite")
+
+      fallback = "Sì esatto, hai capito come funziona."
+
+      text = sys_payload ? sys_payload.payload : fallback
+
+      items = render_generic_items(sys_payload&.kind || "text", text, style: "payload")
+
+      { items: items }
+    when "sys_boot_first"
+      sys_payload = SystemPayload.find_by(key: "boot_first")
+      name = current_user.username || "Ribelle"
+
+      fallback = "Ciao #{name}, benvenutə nel Portale! \n\nQuesta è la nostra base digitale: il punto dell'internet in cui ci siamo rifugiati per tenere viva la Resistenza.\nDa adesso ne fai parte.\n\nUsa le parole chiave che trovi nel Volume 0 per accedere ai contenuti extra e aiutarci davvero.\n\nUn unico avvertimento: navigando questo nero in solitudine ci si potrebbe smarrire e convincere di essere insignificanti, ma è tutto il contrario.\n\nOgni tua azione, che ti piaccia o meno, cambierà per sempre la storia di questa Resistenza.\n\nPortale avviato."
+
+      text = sys_payload ? sys_payload.payload.gsub("{{name}}", name) : fallback
+
+      # Passiamo style: nil per mantenere il verde del terminale
+      items = render_generic_items(sys_payload&.kind || "text", text, style: nil)
+
+      { items: items }
+
+    when "sys_boot_standard"
+      sys_payload = SystemPayload.find_by(key: "boot_standard")
+      name = current_user.username || "Ribelle"
+
+      fallback = "Ciao #{name}. Portale avviato."
+
+      text = sys_payload ? sys_payload.payload.gsub("{{name}}", name) : fallback
+
+      # Passiamo style: nil per mantenere il verde del terminale
+      items = render_generic_items(sys_payload&.kind || "text", text, style: nil)
+
+      { items: items }
     when "coordinate"
       sys_payload = SystemPayload.find_by(key: "puzzle_coord_intro")
       items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Il Portale contiene 1 informazione critica: le coordinate del nostro prossimo incontro.\nÈ vitale che tu ci sia, ma per ovvie ragioni abbiamo dovuto nascondere luogo e orario. Inseriscili qui quando li avrai trovati.", style: "payload" } ]
@@ -193,22 +228,29 @@ class CommandsController < ApplicationController
 
       # --- COSTRUZIONE OUTPUT ---
       raw_lines = [
-        "**----FRONTE DELLA RESISTENZA----**",
-        "N.Ribelli arruolati: #{User.count}",
+        "----FRONTE DELLA RESISTENZA----",
         "",
-        "**Liberare il tempo**",
+        "Ribelli arruolati: #{User.count}",
+        "",
+        "---",
+        "",
+        "Stato delle missioni:",
+        "",
+        "1. Missione Tempo Libero - Gianchi",
+        "",
         "Totale tempo donato: #{global_time_str}",
         "Tempo necessario per pubblicare il prossimo volume: #{target_min} minuti",
         "",
-        "**Riconquistare il linguaggio**",
-        "Solitudine.",
-        "N.Definizioni raccolte: #{global_definitions}",
+        "2. Missione Parole Nuove - Sussurro",
         "",
-        "**Distruggere le macchine**",
-        "Blocky.",
+        "Vocabolo: Solitudine",
+        "Definizioni raccolte: #{global_definitions}",
+        "",
+        "3. Missione Ammazza il pupazzo - Alfiere",
+        "",
         "MB Distrutti: #{global_mb} MB",
         "",
-        "**----LA TUA LOTTA----**",
+        "----LA TUA LOTTA----",
         "",
         "Tempo donato: #{s[:donation_time]}", # Usa la tua formattazione da user.rb
         "Parole riconquistate: #{s[:definitions_count]}",
@@ -433,7 +475,7 @@ class CommandsController < ApplicationController
     end
   end
 
-  def render_generic_items(kind, payload, interactive: false)
+  def render_generic_items(kind, payload, interactive: false, style: "payload")
     return [] if payload.blank?
 
     case kind.to_s
@@ -445,8 +487,8 @@ class CommandsController < ApplicationController
           url = part.sub("IMAGE::", "").strip
           { type: "image", url: url }
         else
-          # Assegniamo la chiave interactive solo se il parametro è true
-          item = { type: "text", text: part, style: "payload" }
+          item = { type: "text", text: part }
+          item[:style] = style if style.present? # Applica lo stile solo se definito
           item[:interactive] = true if interactive
           item
         end

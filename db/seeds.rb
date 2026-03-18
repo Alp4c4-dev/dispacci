@@ -64,7 +64,12 @@ system_rows = [
   { key: "dossier", kind: "text", payload: payload_for.call("system/Dossier.txt") },
   { key: "armeria", kind: "text", payload: payload_for.call("system/Armeria.txt") },
   { key: "galleria", kind: "text", payload: payload_for.call("system/Galleria.txt") },
-  { key: "mappa", kind: "text", payload: payload_for.call("system/Mappa.txt") }
+  { key: "mappa", kind: "text", payload: payload_for.call("system/Mappa.txt") },
+
+  # messaggi di avvio
+  { key: "boot_first", kind: "text", payload: payload_for.call("system/Testa.txt") },
+  { key: "boot_standard", kind: "text", payload: payload_for.call("system/boot_standard.txt")},
+  { key: "esplicite", kind: "text", payload: payload_for.call("system/esplicite.txt")}
 ]
 
 # Inserisce o aggiorna i record nel database usando la chiave come riferimento univoco
