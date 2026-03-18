@@ -119,7 +119,6 @@ class CommandsController < ApplicationController
       items = render_generic_items(sys_payload&.kind || "text", text, style: nil)
 
       { items: items }
-
     when "sys_boot_standard"
       sys_payload = SystemPayload.find_by(key: "boot_standard")
       name = current_user.username || "Ribelle"

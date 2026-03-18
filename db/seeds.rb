@@ -30,13 +30,12 @@ rows = [
   { key: "GrandeNuvola", category: "Dossier", kind: "text", payload: payload_for.call("unlockables/GrandeNuvola.txt") },
   { key: "KemmigEdition", category: "Dossier", kind: "image", payload: "/media/img/kemmigedition.webp" },
   { key: "scoop", category: "Dossier", kind: "text", payload: payload_for.call("unlockables/scoop.txt") },
+  { key: "scrivere", category: "Dossier", kind: "text", payload: payload_for.call("unlockables/scrivere.txt") },
 
   # ----------------
   # Galleria
   # ----------------
-  { key: "crescente", category: "Galleria", kind: "image", payload: "/media/img/crescente.webp" },
   { key: "Parata", category: "Galleria", kind: "audio", payload: "/media/audio/parata.m4a" },
-  { key: "fotografia01", category: "Galleria", kind: "image", payload: "/media/img/fotografia01.webp" },
   { key: "Blocky", category: "Galleria", kind: "image", payload: "/media/img/blocky.webp" },
   { key: "Segreto", category: "Galleria", kind: "image", payload: "/media/img/segreto.webp" },
   { key: "Credits", category: "Galleria", kind: "text", payload: payload_for.call("unlockables/Credits.txt") }, # payload misto testo-immagine
@@ -68,8 +67,8 @@ system_rows = [
 
   # messaggi di avvio
   { key: "boot_first", kind: "text", payload: payload_for.call("system/Testa.txt") },
-  { key: "boot_standard", kind: "text", payload: payload_for.call("system/boot_standard.txt")},
-  { key: "esplicite", kind: "text", payload: payload_for.call("system/esplicite.txt")}
+  { key: "boot_standard", kind: "text", payload: payload_for.call("system/boot_standard.txt") },
+  { key: "esplicite", kind: "text", payload: payload_for.call("system/esplicite.txt") }
 ]
 
 # Inserisce o aggiorna i record nel database usando la chiave come riferimento univoco
