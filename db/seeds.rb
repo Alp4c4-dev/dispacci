@@ -54,7 +54,7 @@ Unlockable.upsert_all(rows, unique_by: :key)
 
 # Cleanup: elimina dal DB gli unlockable che non sono più nel seed
 seed_keys = rows.map { |h| h[:key] }
-Unlockable.where.not(key: seed_keys).delete_all
+Unlockable.where.not(key: seed_keys).destroy_all
 
 # ----------------
 # System Payloads (Comandi di sistema)
@@ -76,4 +76,4 @@ SystemPayload.upsert_all(system_rows, unique_by: :key)
 
 # Cleanup: elimina dal DB i SystemPayload che non sono più presenti in questo array
 sys_seed_keys = system_rows.map { |h| h[:key] }
-SystemPayload.where.not(key: sys_seed_keys).delete_all
+SystemPayload.where.not(key: sys_seed_keys).destroy_all
