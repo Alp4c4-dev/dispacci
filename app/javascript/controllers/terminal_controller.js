@@ -192,7 +192,14 @@ export default class extends Controller {
     if (contentType.includes("application/json")) {
       data = await res.json().catch(() => ({}))
     } else {
-      // Rails sta rispondendo HTML (tipico delle pagine errore)
+      // Se Rails risponde con un 422 HTML, il token CSRF è saltato/scaduto.
+      // Ricarichiamo la pagina in automatico per generare un token fresco.
+      if (res.status === 422) {
+        window.location.reload()
+        return { ok: false, data: { error: "Sincronizzazione di sicurezza, riprova..." } }
+      }
+
+      // Rails sta rispondendo HTML (tipico delle pagine errore 500)
       const text = await res.text().catch(() => "")
       data = { error: text.slice(0, 200) } // primi 200 caratteri
     }
@@ -963,7 +970,7 @@ export default class extends Controller {
 
         <div class="map-actions" style="margin: 0; gap: 15px; align-items: center; width: 100%;">
           <input type="text" class="input-coord puzzle-xy" placeholder="XY" maxlength="2" autocomplete="off">
-          <input type="text" class="input-text puzzle-testo" placeholder="Testo decodificato" autocomplete="off" style="width: 220px; flex-grow: 0;">
+          <input type="text" class="input-text puzzle-testo" placeholder="Testo" autocomplete="off" style="width: 150px; flex-grow: 0;">
           <button class="btn-confirm puzzle-submit-coord" style="margin: 0;">INVIO</button>
         </div>
 
