@@ -431,29 +431,37 @@ export default class extends Controller {
       text = text.slice(1)
     }
 
+    // Controlla se eravamo in fondo PRIMA di aggiungere la riga
+    const wasAtBottom = this.isScrolledToBottom();
     this.screenTarget.appendChild(line)
-
-    // SCATTO SINGOLO: inquadra la riga solo se l'utente ha appena sbloccato la pausa
-    if (this.needsSnap) {
-      this.screenTarget.scrollTop = this.screenTarget.scrollHeight
-      this.needsSnap = false
-    }
+    if (wasAtBottom) this.scrollToBottom();
 
     if (this.skipPrinting) {
       this.setLineContent(line, text)
+      if (wasAtBottom) this.scrollToBottom();
       return
     }
 
     for (let i = 1; i <= text.length; i++) {
       if (this.skipPrinting) {
         this.setLineContent(line, text)
+        if (this.isScrolledToBottom()) this.scrollToBottom();
         return
       }
+
+      // Controlla se stiamo guardando la fine, e nel caso segue la stampa lettera per lettera
+      const currentlyAtBottom = this.isScrolledToBottom();
       line.textContent = text.slice(0, i)
+
+      if (currentlyAtBottom) {
+        this.scrollToBottom();
+      }
+
       await this.sleep(charDelay)
     }
 
     this.setLineContent(line, text)
+    if (this.isScrolledToBottom()) this.scrollToBottom();
   }
 
   async printLinesTypewriter(lines, { lineDelay = 140, charDelay = 10 } = {}) {
@@ -492,11 +500,12 @@ export default class extends Controller {
       line.textContent = text
     }
 
+    const wasAtBottom = this.isScrolledToBottom();
     this.screenTarget.appendChild(line)
 
-    // Scorre solo se richiesto esplicitamente
-    if (autoScroll) {
-      this.screenTarget.scrollTop = this.screenTarget.scrollHeight
+    // Scorre se forzato (es. nuovo comando), OPPURE se stavamo già guardando la fine
+    if (autoScroll || wasAtBottom) {
+      this.scrollToBottom()
     }
   }
 
@@ -605,7 +614,7 @@ export default class extends Controller {
 
   resumePrinting() {
     if (this.resumePrintingResolve) {
-      this.needsSnap = true
+      this.scrollToBottom(); // Ti riporta in fondo all'azione quando sblocchi la pausa
       this.resumePrintingResolve()
     }
   }
@@ -817,8 +826,6 @@ export default class extends Controller {
     // Se risposta ok: stampa (typewriter) e gestisci eventuale awaiting
     if (ok && data && data.ok) {
       await this.enqueuePrint(async () => {
-
-        this.needsSnap = true // sposta focus su prima riga stampata
 
         if (Array.isArray(data.items) && data.items.length > 0) {
           await this.printItemsTypewriter(data.items, { charDelay: 10, lineDelay: 140 })
@@ -1112,5 +1119,16 @@ export default class extends Controller {
     this.printReadyPrompt();
     this.promptTarget.disabled = false;
     setTimeout(() => this.promptTarget.focus(), 20);
+  }
+
+  // Verifica se l'utente sta guardando la fine dello schermo (con una piccola tolleranza di 40px)
+  isScrolledToBottom() {
+    const el = this.screenTarget;
+    return el.scrollHeight - el.clientHeight - el.scrollTop <= 40;
+  }
+
+  // Forza istantaneamente lo scroll verso il basso
+  scrollToBottom() {
+    this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
   }
 }
