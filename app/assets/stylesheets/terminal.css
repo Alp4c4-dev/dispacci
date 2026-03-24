@@ -105,6 +105,25 @@
         border-radius: 0;
     }
 
+    /* Stile per il tasto di invio */
+    #prompt-send-btn {
+        background: transparent;
+        border: none;
+        color: #0a3;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0 8px 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+    }
+
+    #prompt-send-btn:hover,
+    #prompt-send-btn:active {
+        color: #0eff0e;
+    }
+
     /* Schermata inserimento codice */
     #code-screen {
         display: none;

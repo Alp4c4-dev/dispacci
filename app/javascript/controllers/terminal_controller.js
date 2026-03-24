@@ -432,7 +432,6 @@ export default class extends Controller {
     }
 
     this.screenTarget.appendChild(line)
-    this.screenTarget.scrollTop = this.screenTarget.scrollHeight
 
     if (this.skipPrinting) {
       this.setLineContent(line, text)
@@ -445,7 +444,6 @@ export default class extends Controller {
         return
       }
       line.textContent = text.slice(0, i)
-      this.screenTarget.scrollTop = this.screenTarget.scrollHeight
       await this.sleep(charDelay)
     }
 
@@ -469,7 +467,7 @@ export default class extends Controller {
     }
   }
 
-  printLine(text, extraClass ="") {
+  printLine(text, extraClass ="", autoScroll = false) {
     const line = document.createElement("div")
     line.className = "line"
 
@@ -482,7 +480,6 @@ export default class extends Controller {
       text = text.slice(1)
     }
 
-    // Se contiene **...** allora usa HTML formattato, altrimenti testo normale
     if (text.includes("**")) {
       line.innerHTML = this.formatTextToHtml(text)
     } else {
@@ -490,15 +487,18 @@ export default class extends Controller {
     }
 
     this.screenTarget.appendChild(line)
-    this.screenTarget.scrollTop = this.screenTarget.scrollHeight
+
+    // Scorre solo se richiesto esplicitamente
+    if (autoScroll) {
+      this.screenTarget.scrollTop = this.screenTarget.scrollHeight
+    }
   }
 
   printSpacerLine() {
     const line = document.createElement("div")
     line.className = "line no-prompt"
-    line.innerHTML = "&nbsp;" // garantisce altezza visibile
+    line.innerHTML = "&nbsp;"
     this.screenTarget.appendChild(line)
-    this.screenTarget.scrollTop = this.screenTarget.scrollHeight
   }
 
   printLines(lines) {
@@ -507,11 +507,6 @@ export default class extends Controller {
 
   printReadyPrompt() {
     this.printLine("Interfaccia terminale pronta. Inserisci un comando.")
-  }
-
-  renderItems(items) {
-    for (const item of items) this.renderItem(item)
-    this.screenTarget.scrollTop = this.screenTarget.scrollHeight
   }
 
   renderItem(item) {
@@ -565,12 +560,14 @@ export default class extends Controller {
 
       line.appendChild(a)
       this.screenTarget.appendChild(line)
-      this.screenTarget.scrollTop = this.screenTarget.scrollHeight
       return
     }
 
-
     this.screenTarget.appendChild(line)
+  }
+
+  renderItems(items) {
+    for (const item of items) this.renderItem(item)
   }
 
   async waitForUser() {
@@ -680,7 +677,6 @@ export default class extends Controller {
     }
 
     this.timerLineEl.textContent = text
-    this.screenTarget.scrollTop = this.screenTarget.scrollHeight
   }
 
   startTimer() {
@@ -775,8 +771,8 @@ export default class extends Controller {
     const input = raw.trim()
     if (!input) return
 
-    // eco a schermo
-    this.printLine("/" + input)
+    // eco a schermo e ancora la visuale al comando
+    this.printLine("/" + input, "", true)
 
     // logout
     if (input === "logout") {
@@ -883,7 +879,9 @@ export default class extends Controller {
       <div class="map-form" style="margin-top: 5px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
 
         <div style="width: 100%; max-width: 500px;">
-          <textarea class="input-text def-input" placeholder="Scrivi qui la tua definizione..." rows="4" style="width: 100%; resize: vertical; padding: 10px;"></textarea>
+          <textarea class="input-text def-input" placeholder="Scrivi qui la tua definizione..." rows="4"
+                    autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="send"
+                    style="width: 100%; resize: vertical; padding: 10px;"></textarea>
         </div>
 
         <div class="map-actions" style="margin: 0; justify-content: flex-start; gap: 10px; width: 100%;">
@@ -917,8 +915,8 @@ export default class extends Controller {
     // Rimuove la classe per "sganciarlo" e non creare conflitti futuri
     container.classList.remove("definition-container");
 
-    // Eco visivo della definizione
-    this.printLine(definition);
+    // Eco visivo della definizione e ancora la visuale
+    this.printLine(definition, "", true);
 
     const { ok, data } = await this.postJSON("/definitions", {
       word: word,
@@ -964,20 +962,29 @@ export default class extends Controller {
     // Annulla il pre-wrap ereditato dalla classe .line, permettendo di formattare il codice su più righe
     container.style.whiteSpace = "normal";
 
-    // Niente più id="...", usiamo classi specifiche (es. puzzle-xy) aggiunte a quelle estetiche
+    // siamo classi specifiche (es. puzzle-xy) aggiunte a quelle estetiche
     container.innerHTML = `
       <div class="map-form" style="margin-top: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
 
         <div class="map-actions" style="margin: 0; gap: 15px; align-items: center; width: 100%;">
-          <input type="text" class="input-coord puzzle-xy" placeholder="XY" maxlength="2" autocomplete="off">
-          <input type="text" class="input-text puzzle-testo" placeholder="Testo" autocomplete="off" style="width: 150px; flex-grow: 0;">
+          <input type="text" class="input-coord puzzle-xy" placeholder="XY" maxlength="2"
+                 autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="next">
+
+          <input type="text" class="input-text puzzle-testo" placeholder="Testo"
+                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="send" style="width: 150px; flex-grow: 0;">
+
           <button class="btn-confirm puzzle-submit-coord" style="margin: 0;">INVIO</button>
         </div>
 
         <div class="map-actions" style="margin: 0; gap: 5px; align-items: center; width: 100%;">
-          <input type="text" class="input-coord puzzle-ora" placeholder="HH" maxlength="2" autocomplete="off">
+          <input type="text" class="input-coord puzzle-ora" placeholder="HH" maxlength="2"
+                 autocomplete="off" inputmode="numeric" enterkeyhint="next">
+
           <span style="font-family: monospace; font-size: 20px; font-weight: bold; color: inherit;">:</span>
-          <input type="text" class="input-coord puzzle-minuti" placeholder="MM" maxlength="2" autocomplete="off">
+
+          <input type="text" class="input-coord puzzle-minuti" placeholder="MM" maxlength="2"
+                 autocomplete="off" inputmode="numeric" enterkeyhint="send">
+
           <button class="btn-confirm puzzle-submit-time" style="margin: 0; margin-left: 10px;">INVIO</button>
         </div>
 

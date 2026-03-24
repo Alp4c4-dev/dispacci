@@ -6,14 +6,23 @@
 
       <label>
         Username
-        <input id="login-username" type="text" autocomplete="off"
+        <input id="login-username"
+               type="text"
+               autocomplete="off"
+               autocorrect="off"
+               autocapitalize="none"
+               spellcheck="false"
+               enterkeyhint="next"
                data-terminal-target="loginUsername"
                data-action="keydown.enter->terminal#attemptLogin" />
       </label>
 
       <label>
         Password
-        <input id="login-password" type="password" autocomplete="off"
+        <input id="login-password"
+               type="password"
+               autocomplete="off"
+               enterkeyhint="go"
                data-terminal-target="loginPassword"
                data-action="keydown.enter->terminal#attemptLogin" />
       </label>
@@ -33,7 +42,10 @@
         <input id="registration-code"
                type="text"
                autocomplete="off"
+               autocorrect="off"
+               autocapitalize="characters"
                spellcheck="false"
+               enterkeyhint="go"
                style="text-transform: uppercase;"
                data-terminal-target="codeInput"
                data-action="keydown.enter->terminal#attemptRegistration" />
@@ -51,10 +63,23 @@
     <div id="screen" data-terminal-target="screen"></div>
 
     <div id="inputbar">
-      <span class="prompt-symbol"> / </span>
-      <input id="prompt" type="text" autocomplete="off"
-             data-terminal-target="prompt"
-             data-action="keydown.enter->terminal#onPromptEnter" />
+      <span class="prompt-symbol">/</span>
+
+      <input type="text"
+         id="prompt"
+         data-terminal-target="prompt"
+         data-action="keydown.enter->terminal#onPromptEnter"
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="none"
+         spellcheck="false"
+         data-1p-ignore
+         enterkeyhint="send"
+         placeholder="Digita un comando...">
+
+      <button type="button" id="prompt-send-btn" data-action="click->terminal#onPromptEnter">
+        ➤
+      </button>
     </div>
   </div>
 

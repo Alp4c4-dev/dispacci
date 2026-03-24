@@ -52,7 +52,7 @@ class CommandsController < ApplicationController
       # C. Se la categoria è Mappa, aggiungiamo il link alla view interattiva
       if category == "Mappa"
         items << { type: "text", text: "", style: "payload" } # Spazio vuoto per staccare
-        items << { type: "link", text: "Mappa", url: "/map" }
+        items << { type: "link", text: "Vai alla Mappa", url: "/map" }
       end
 
       return { items: items }
