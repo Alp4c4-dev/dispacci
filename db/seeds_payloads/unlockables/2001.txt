@@ -6,6 +6,4 @@ L'origine di tale sistema di datazione va rintracciata nella funzione 'Accadde n
 Ennemeno è un sistema di datazione relativo, che contribuisce a far perdere il senso del tempo. 
 Con questo sistema, gli eventi passati e futuri cambiano la loro collocazione di continuo, fino a perderla del tutto.
 
-Noi, però, non dimentichiamo nulla. Conoscere il tempo in cui viviamo è il minimo indispensabile per opporci al corso degli eventi.
-
-I Dispacci presentano date nel formato 'n-x': inserisci nel Portale l'anno lunare corrispondente, per recuperare un pezzo di storia.
+Noi, però, non dimentichiamo nulla. Conoscere il tempo in cui viviamo è il minimo indispensabile per opporci al corso degli eventi. I Dispacci presentano date nel formato 'n-x': inserisci nel Portale l'anno lunare corrispondente, per recuperare un pezzo di storia.

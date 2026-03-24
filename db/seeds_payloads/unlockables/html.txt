@@ -101,7 +101,7 @@ button{border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(
 </div>
 </article>
 
-<!-- 3 — AURELIUS -->
+<!-- 3 — AURELIUS  -->
 <article class="card" data-price="mid">
 <div class="thumb">
 <span class="badge">Protettori</span>
@@ -111,7 +111,7 @@ button{border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(
 <rect x="44" y="40" width="12" height="25" rx="2" fill="#142030"/>
 </svg>
 </div>
-<div class="title">Aurelius, mago protettore</div>
+<div class="title">Aurelius, l'ammazza conigli</div>
 <div class="meta">Mantellobianco · Scala 28mm</div>
 <div class="price">$$ 32.00</div>
 <div class="buy">
