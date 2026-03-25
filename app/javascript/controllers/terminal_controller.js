@@ -349,10 +349,10 @@ export default class extends Controller {
     if (ok && data && data.ok) {
       await this.enqueuePrint(async () => {
         if (Array.isArray(data.items) && data.items.length > 0) {
-          await this.printItemsTypewriter(data.items, { charDelay: 10, lineDelay: 140 });
+          await this.printItemsTypewriter(data.items, { charDelay: 30, lineDelay: 140 });
         } else {
           const lines = this.extractTextLines(data);
-          await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 });
+          await this.printLinesTypewriter(lines, { charDelay: 30, lineDelay: 140 });
         }
       });
     } else {
@@ -419,7 +419,7 @@ export default class extends Controller {
     return this.printQueue
   }
 
-  async printLineTypewriter(text, { charDelay = 10, extraClass = "" } = {}) {
+  async printLineTypewriter(text, { charDelay = 30, extraClass = "" } = {}) {
     const line = document.createElement("div")
     line.className = "line"
     if (extraClass) line.classList.add(extraClass)
@@ -464,7 +464,7 @@ export default class extends Controller {
     if (this.isScrolledToBottom()) this.scrollToBottom();
   }
 
-  async printLinesTypewriter(lines, { lineDelay = 140, charDelay = 10 } = {}) {
+  async printLinesTypewriter(lines, { lineDelay = 140, charDelay = 30 } = {}) {
     this.isPrinting = true
     this.skipPrinting = false
 
@@ -547,6 +547,13 @@ export default class extends Controller {
       img.src = url
       img.alt = item.alt || ""
       img.className = "terminal-media terminal-image"
+
+      // AUTO-SCROLL PER IMMAGINI:
+      // Appena l'immagine è fisicamente caricata, spinge lo schermo in basso
+      img.onload = () => {
+        this.scrollToBottom()
+      }
+
       line.appendChild(img)
     } else if (item.type === "audio") {
       const audio = document.createElement("audio")
@@ -565,20 +572,25 @@ export default class extends Controller {
     }
 
     if (item.type === "link") {
-      const line = document.createElement("div")
-      line.className = "line no-prompt"
+      const lineLink = document.createElement("div")
+      lineLink.className = "line no-prompt"
 
       const a = document.createElement("a")
       a.href = item.url
       a.textContent = item.text || item.url
       a.rel = "noopener"
 
-      line.appendChild(a)
-      this.screenTarget.appendChild(line)
+      lineLink.appendChild(a)
+      this.screenTarget.appendChild(lineLink)
       return
     }
 
     this.screenTarget.appendChild(line)
+
+    // Forza lo scroll istantaneo anche per audio e video (per mostrare i player)
+    if (item.type === "audio" || item.type === "video") {
+      this.scrollToBottom()
+    }
   }
 
   renderItems(items) {
@@ -619,7 +631,7 @@ export default class extends Controller {
     }
   }
 
-  async printItemsTypewriter(items, { lineDelay = 140, charDelay = 10 } = {}) {
+  async printItemsTypewriter(items, { lineDelay = 140, charDelay = 30 } = {}) {
     this.isPrinting = true
     this.skipPrinting = false
 
@@ -828,10 +840,10 @@ export default class extends Controller {
       await this.enqueuePrint(async () => {
 
         if (Array.isArray(data.items) && data.items.length > 0) {
-          await this.printItemsTypewriter(data.items, { charDelay: 10, lineDelay: 140 })
+          await this.printItemsTypewriter(data.items, { charDelay: 30, lineDelay: 140 })
         } else {
           const lines = this.extractTextLines(data)
-          await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 })
+          await this.printLinesTypewriter(lines, { charDelay: 30, lineDelay: 140 })
         }
 
         // Evita di stampare lo spazio vuoto se stiamo aprendo un modulo (definizioni o coordinate)
@@ -1070,10 +1082,10 @@ export default class extends Controller {
     if (ok && data && data.ok) {
       await this.enqueuePrint(async () => {
         if (Array.isArray(data.items) && data.items.length > 0) {
-          await this.printItemsTypewriter(data.items, { charDelay: 10, lineDelay: 140 });
+          await this.printItemsTypewriter(data.items, { charDelay: 30, lineDelay: 140 });
         } else if (data.lines) {
           const lines = this.extractTextLines(data);
-          await this.printLinesTypewriter(lines, { charDelay: 10, lineDelay: 140 });
+          await this.printLinesTypewriter(lines, { charDelay: 30, lineDelay: 140 });
         }
       });
 
