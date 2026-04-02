@@ -16,6 +16,7 @@ class WordDefinitionsController < ApplicationController
 
     rec = WordDefinition.find_or_initialize_by(user: current_user, word: word)
     rec.definition = definition
+    rec.user_session_id = session[:user_session_id]
     rec.save!
 
     render json: { ok: true }

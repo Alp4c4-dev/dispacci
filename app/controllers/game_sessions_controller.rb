@@ -9,6 +9,7 @@ class GameSessionsController < ApplicationController
     return render json: { ok: false, error: "game_key mancante" }, status: :unprocessable_entity if game_key.blank?
 
     gs = current_user.game_sessions.create!(
+      user_session_id: session[:user_session_id],
       game_key: game_key,
       score: [ score, 0 ].max,
       started_at: started_at,

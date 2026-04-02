@@ -9,12 +9,35 @@ class CommandsController < ApplicationController
   def create
     cmd = params[:command].to_s.strip
 
+    # KPI: update activity
+    current_user.update_column(:last_activity_at, Time.current)
+
     result =
       if cmd.empty?
         { lines: [ "(vuoto)" ] }
       else
         dispatch_command(cmd)
       end
+
+    # KPI: log attempt
+    if cmd.present? && session[:user_session_id]
+      cmd_norm = cmd.downcase
+
+      # Verifica se è un comando di sistema/categoria o una parola sbloccabile
+      is_category = CATEGORY_COMMANDS.any? { |c| c.downcase == cmd_norm }
+      unlockable = Unlockable.where("LOWER(key) = ?", cmd_norm).first
+
+      # Determina se il comando ha avuto successo
+      is_correct = is_category || unlockable.present? || handle_utility_command(cmd).present?
+
+      CommandAttempt.create!(
+        user: current_user,
+        user_session_id: session[:user_session_id],
+        keyword_input: cmd,
+        keyword_id: (unlockable&.key || (is_category ? cmd_norm : nil)),
+        is_correct: is_correct
+      )
+    end
 
     render json: { ok: true }.merge(result)
   end
@@ -279,6 +302,8 @@ class CommandsController < ApplicationController
 
       Donation.create!(
         user: current_user,
+        user_session_id: session[:user_session_id],
+        completed: true,
         seconds: duration,
         started_at: start_time,
         ended_at: Time.current

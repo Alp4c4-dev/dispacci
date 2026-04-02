@@ -15,6 +15,14 @@ class RegistrationsController < ApplicationController
     if user.save
       session[:user_id] = user.id
 
+      user_session = UserSession.create!(user: user, started_at: Time.current)
+      session[:user_session_id] = user_session.id
+      user.update!(
+        last_login_at: Time.current,
+        last_activity_at: Time.current,
+        total_sessions_count: 1
+      )
+
       first_time = user.first_seen_at.nil?
       user.update!(first_seen_at: Time.current) if first_time
 

@@ -13,6 +13,14 @@ class SessionsController < ApplicationController
     if user.authenticate(password)
       session[:user_id] = user.id
 
+      user_session = UserSession.create!(user: user, started_at: Time.current)
+      session[:user_session_id] = user_session.id
+      user.update!(
+        last_login_at: Time.current,
+        last_activity_at: Time.current,
+        total_sessions_count: (user.total_sessions_count || 0) + 1
+      )
+
       first_time = user.first_seen_at.nil?
       user.update(first_seen_at: Time.current) if first_time
 
@@ -35,5 +43,19 @@ class SessionsController < ApplicationController
     end
 
     render json: { ok: false }, status: :unauthorized
+  end
+
+  def destroy
+    if session[:user_session_id]
+      user_session = UserSession.find_by(id: session[:user_session_id])
+      if user_session
+        duration = (Time.current - user_session.started_at).to_i
+        user_session.update!(ended_at: Time.current, duration_seconds: duration)
+      end
+    end
+
+    session.delete(:user_id)
+    session.delete(:user_session_id)
+    render json: { ok: true }
   end
 end

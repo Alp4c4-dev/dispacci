@@ -10,15 +10,30 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_13_100146) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_31_073907) do
+  create_table "command_attempts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "is_correct", default: false
+    t.string "keyword_id"
+    t.string "keyword_input"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.integer "user_session_id", null: false
+    t.index ["user_id"], name: "index_command_attempts_on_user_id"
+    t.index ["user_session_id"], name: "index_command_attempts_on_user_session_id"
+  end
+
   create_table "donations", force: :cascade do |t|
+    t.boolean "completed", default: false
     t.datetime "created_at", null: false
     t.datetime "ended_at"
     t.integer "seconds"
     t.datetime "started_at"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.integer "user_session_id"
     t.index ["user_id"], name: "index_donations_on_user_id"
+    t.index ["user_session_id"], name: "index_donations_on_user_session_id"
   end
 
   create_table "game_sessions", force: :cascade do |t|
@@ -29,9 +44,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_100146) do
     t.datetime "started_at"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.integer "user_session_id"
     t.index ["game_key", "score"], name: "index_game_sessions_on_game_key_and_score"
     t.index ["user_id", "game_key"], name: "index_game_sessions_on_user_id_and_game_key"
     t.index ["user_id"], name: "index_game_sessions_on_user_id"
+    t.index ["user_session_id"], name: "index_game_sessions_on_user_session_id"
   end
 
   create_table "system_payloads", force: :cascade do |t|
@@ -53,6 +70,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_100146) do
     t.index ["key"], name: "index_unlockables_on_key", unique: true
   end
 
+  create_table "user_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "duration_seconds"
+    t.datetime "ended_at"
+    t.datetime "started_at"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_user_sessions_on_user_id"
+  end
+
   create_table "user_unlocks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "unlockable_id", null: false
@@ -65,7 +92,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_100146) do
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "first_seen_at"
+    t.datetime "last_activity_at"
+    t.datetime "last_login_at"
     t.string "password_digest"
+    t.integer "total_sessions_count", default: 0
     t.datetime "updated_at", null: false
     t.string "username"
     t.index ["username"], name: "index_users_on_username", unique: true
@@ -76,14 +106,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_100146) do
     t.text "definition"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.integer "user_session_id"
     t.string "word"
     t.index ["user_id", "word"], name: "index_word_definitions_on_user_id_and_word", unique: true
     t.index ["user_id"], name: "index_word_definitions_on_user_id"
+    t.index ["user_session_id"], name: "index_word_definitions_on_user_session_id"
   end
 
+  add_foreign_key "command_attempts", "user_sessions"
+  add_foreign_key "command_attempts", "users"
+  add_foreign_key "donations", "user_sessions"
   add_foreign_key "donations", "users"
+  add_foreign_key "game_sessions", "user_sessions"
   add_foreign_key "game_sessions", "users"
+  add_foreign_key "user_sessions", "users"
   add_foreign_key "user_unlocks", "unlockables"
   add_foreign_key "user_unlocks", "users"
+  add_foreign_key "word_definitions", "user_sessions"
   add_foreign_key "word_definitions", "users"
 end
