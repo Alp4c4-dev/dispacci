@@ -2,7 +2,7 @@ require "csv"
 
 class KpisController < ApplicationController
   # Definisci qui la tua password per il link segreto
-  SECRET_TOKEN = "buonaperme"
+  SECRET_TOKEN = "f0rz4.R0m4!"
 
   def index
     if params[:token] != SECRET_TOKEN
@@ -43,6 +43,7 @@ class KpisController < ApplicationController
             <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=donations">4. Scarica Tabella Donazioni (Timer)</a></li>
             <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=breakout">5. Scarica Tabella Partite Breakout</a></li>
             <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=definitions">6. Scarica Tabella Definizioni Solitudine</a></li>
+            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=unlocks">7. Scarica Tabella Contenuti Sbloccati</a></li>
           </ul>
         </div>
       </body>
@@ -86,6 +87,12 @@ class KpisController < ApplicationController
         csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Parola", "Definizione", "Data Inserimento" ]
         WordDefinition.includes(:user).find_each do |w|
           csv << [ w.id, w.user_id, w.user&.username, w.user_session_id, w.word, w.definition, w.created_at ]
+        end
+      when "unlocks"
+        csv << [ "ID Sblocco", "ID Utente", "Username", "Parola Chiave (Key)", "Categoria", "Data Sblocco" ]
+        # .includes() previene le query ridondanti al database ("N+1 queries")
+        UserUnlock.includes(:user, :unlockable).find_each do |uu|
+          csv << [ uu.id, uu.user_id, uu.user&.username, uu.unlockable&.key, uu.unlockable&.category, uu.created_at ]
         end
       else
         csv << [ "Errore: Tabella non trovata" ]
