@@ -2,7 +2,7 @@ require "csv"
 
 class KpisController < ApplicationController
   # Definisci qui la tua password per il link segreto
-  SECRET_TOKEN = "f0rz4.R0m4!"
+  SECRET_TOKEN = "f0rz4.R0m4"
 
   def index
     if params[:token] != SECRET_TOKEN
