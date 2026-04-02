@@ -28,4 +28,6 @@ Rails.application.routes.draw do
 
   get "/games/breakout", to: "games#breakout"
   resources :game_sessions, only: [ :create ]
+
+  get "/kpi", to: "kpis#index"
 end
