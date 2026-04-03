@@ -756,6 +756,10 @@ export default class extends Controller {
     this.timerActive = false
     this.timerWarningCount = 0
 
+    // 2. Sincronizza l'ultimo frame con il tempo esatto calcolato dal server
+    if (serverSeconds !== undefined) {
+      this.updateTimerDisplay(serverSeconds * 1000)
+    }
   }
 
   async handleTimerInterruption() {
@@ -856,6 +860,18 @@ export default class extends Controller {
 
     // Se risposta ok: stampa (typewriter) e gestisci eventuale awaiting
     if (ok && data && data.ok) {
+
+      // Eseguiamo start e stop del timer *prima* di avviare la stampa del testo
+      if (data.meta) {
+        if (data.meta.action === "start_timer") {
+          this.startTimer()
+        }
+        if (data.meta.action === "stop_timer") {
+          this.stopTimer(data.meta.donated_seconds)
+        }
+      }
+
+      // Animazione testo (macchina da scrivere)
       await this.enqueuePrint(async () => {
 
         if (Array.isArray(data.items) && data.items.length > 0) {
@@ -871,19 +887,9 @@ export default class extends Controller {
         }
       })
 
-      // gestione timer ed enigmi
+      // Gestiamo i moduli interattivi (enigmi) *dopo* la stampa, per farli apparire in fondo
       if (data.meta) {
-        if (data.meta.action === "start_timer") {
-          this.startTimer()
-          return
-        }
-        if (data.meta.action === "stop_timer") {
-          // Passiamo i secondi calcolati dal server alla funzione stopTimer
-          this.stopTimer(data.meta.donated_seconds)
-        }
-
         if (data.meta.action == "start_coordinate_puzzle") {
-          // Passiamo l'intero oggetto meta per leggere eventuali campi già risolti
           this.renderCoordinatePuzzle(data.meta)
           return
         }
