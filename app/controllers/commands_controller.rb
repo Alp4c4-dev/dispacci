@@ -297,7 +297,17 @@ class CommandsController < ApplicationController
         return [ "Nessun timer attivo" ]
       end
 
-      duration = (Time.current - start_time.to_time).to_i
+      server_duration = (Time.current - start_time.to_time).to_i
+      client_duration = params[:client_duration]
+
+      # Sincronizza i dati del server con quanto effettivamente mostrato a schermo dal Javascript
+      # Ignora il tempo perso dal server durante la stampa dell'effetto typewriter
+      if client_duration.present? && client_duration.to_i >= 0 && client_duration.to_i <= server_duration
+        duration = client_duration.to_i
+      else
+        duration = server_duration
+      end
+
       duration = 0 if duration < 0
 
       Donation.create!(
@@ -310,7 +320,7 @@ class CommandsController < ApplicationController
       )
       session.delete(:timer_started_at)
 
-      # Calcolo il tempo trascorso
+      # Calcolo il tempo trascorso per il messaggio a schermo
       minutes = duration / 60
       seconds = duration % 60
       min_label = minutes == 1 ? "minuto" : "minuti"

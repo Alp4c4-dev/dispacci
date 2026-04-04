@@ -848,8 +848,14 @@ export default class extends Controller {
       return // Blocca l'esecuzione qui
     }
 
-    // COMANDI SERVER-SIDE GENERICI (/commands)
-    const { ok, data } = await this.postJSON("/commands", { command: input })
+    // Stop timer
+    // Aggiungiamo i secondi visuali del client se stiamo fermando il timer
+    let payload = { command: input }
+    if (input.toLowerCase() === "stop" && this.timerActive) {
+      payload.client_duration = Math.floor(this.timerLastMs / 1000)
+    }
+
+    const { ok, data } = await this.postJSON("/commands", payload)
 
     // Non autenticato: comportamento coerente ovunque
     if (!ok && data && data.error === "Non autenticato") {
@@ -858,22 +864,18 @@ export default class extends Controller {
       return
     }
 
-    // Se risposta ok: stampa (typewriter) e gestisci eventuale awaiting
+    // Se risposta ok, separiamo le azioni
     if (ok && data && data.ok) {
 
-      // Eseguiamo start e stop del timer *prima* di avviare la stampa del testo
+      // Congela immediatamente il timer appena l'utente digita stop
       if (data.meta) {
-        if (data.meta.action === "start_timer") {
-          this.startTimer()
-        }
         if (data.meta.action === "stop_timer") {
           this.stopTimer(data.meta.donated_seconds)
         }
       }
 
-      // Animazione testo (macchina da scrivere)
+      // Stampa testo
       await this.enqueuePrint(async () => {
-
         if (Array.isArray(data.items) && data.items.length > 0) {
           await this.printItemsTypewriter(data.items, { charDelay: 30, lineDelay: 140 })
         } else {
@@ -887,9 +889,12 @@ export default class extends Controller {
         }
       })
 
-      // Gestiamo i moduli interattivi (enigmi) *dopo* la stampa, per farli apparire in fondo
+      // Fa apparire l'animazione del timer e i puzzle solo in fondo alla pagina
       if (data.meta) {
-        if (data.meta.action == "start_coordinate_puzzle") {
+        if (data.meta.action === "start_timer") {
+          this.startTimer()
+        }
+        if (data.meta.action === "start_coordinate_puzzle") {
           this.renderCoordinatePuzzle(data.meta)
           return
         }
@@ -904,7 +909,6 @@ export default class extends Controller {
       this.printReadyPrompt()
       return
     }
-
 
     // Fallback errore generico
     this.printLine("Errore nel server: " + (data?.error || "500"))
