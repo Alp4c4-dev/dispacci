@@ -22,6 +22,7 @@ export default class extends Controller {
     this.timerWarningCount = 0
     this.timerLineEl = null
     this.isInterrupting = false
+    this.wakeLock = null
 
     // Typewriter effect
     this.isPrinting = false
@@ -30,12 +31,14 @@ export default class extends Controller {
 
     // Supporto timer
     // Listener perdita focus
+    /*
     this.onWindowBlur = () => {
       // se la finestra perde focus e il timer è attivo
       if (this.timerActive) {
         this.handleTimerInterruption()
       }
     }
+      */
 
     // Listener per cambio scheda o app
     this.onVisibilityChange = () => {
@@ -62,7 +65,7 @@ export default class extends Controller {
     }
 
     // Aggiunta listener per registrazione eventi
-    window.addEventListener("blur", this.onWindowBlur)
+    //window.addEventListener("blur", this.onWindowBlur)
     document.addEventListener("visibilitychange", this.onVisibilityChange)
     window.addEventListener("pagehide", this.onPageHide)
 
@@ -118,9 +121,28 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.onGlobalKeyDown)
     document.removeEventListener("keydown", this.onSkipKeyDown)
     this.screenTarget.removeEventListener("click", this.onScreenTap)
-    document.removeEventListener("blur", this.onWindowBlur)
+    //document.removeEventListener("blur", this.onWindowBlur)
     window.removeEventListener("visibilitychange", this.onVisibilityChange)
     window.removeEventListener("pagehide", this.onPageHide)
+  }
+
+  // --- WAKE LOCK API (Impedisce allo schermo di spegnersi) ---
+  async requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        this.wakeLock = await navigator.wakeLock.request('screen')
+      } catch (err) {
+        console.warn(`Wake Lock errore: ${err.name}, ${err.message}`)
+      }
+    }
+  }
+
+  releaseWakeLock() {
+    if (this.wakeLock !== null) {
+      this.wakeLock.release().then(() => {
+        this.wakeLock = null
+      })
+    }
   }
 
   backToLogin() {
@@ -619,10 +641,13 @@ export default class extends Controller {
   async waitForUser() {
     this.isWaitingForInput = true
 
-    // Crea l'indicatore "..."
+    // Crea l'indicatore
     const indicator = document.createElement("span")
     indicator.className = "waiting-indicator"
-    indicator.textContent = " ..."
+
+    // simbolo personalizzabile
+    indicator.textContent = " ▼"
+
     // Un po' di stile per farlo lampeggiare
     indicator.style.animation = "blink 1s step-end infinite"
 
@@ -637,7 +662,7 @@ export default class extends Controller {
       this.resumePrintingResolve = resolve
     })
 
-    // L'utente ha premuto: rimuovi "..." e prosegui
+    // L'utente ha premuto: rimuovi indicatore e prosegui
     indicator.remove()
     this.isWaitingForInput = false
     this.resumePrintingResolve = null
@@ -730,6 +755,9 @@ export default class extends Controller {
     // Se per assurdo venisse chiamata due volte
     if (this.timerActive) return
 
+    // WakeLock per blocco schermo
+    this.requestWakeLock()
+
     // Setup stato visuale
     this.timerActive = true
     this.timerWarningCount = 0
@@ -749,6 +777,9 @@ export default class extends Controller {
 
   async stopTimer(serverSeconds) {
     if (!this.timerActive) return
+
+    // libera lo schermo
+    this.releaseWakeLock()
 
     // 1. Ferma la grafica
     clearInterval(this.timerIntervalId)
@@ -777,6 +808,9 @@ export default class extends Controller {
 
   cancelTimer() {
     if (!this.timerActive) return
+
+    // libera lo schermo
+    this.releaseWakeLock()
 
     // ferma l'intervallo e resetta lo stato
     clearInterval(this.timerIntervalId)

@@ -242,8 +242,10 @@
         display: flex;
         flex-direction: column;
         width: 100vw;
+        height: 100vh;      /* forza l'altezza al 100% dello schermo */
+        height: 100dvh;     /* altezza dinamica per mobile */
         box-sizing: border-box;
-        padding: 16px; /* Allineato ai 16px del terminale */
+        padding: 16px;
         background-color: #000;
         color: #fff;
         overflow-y: auto;
@@ -251,11 +253,12 @@
 
     /* Area dedicata all'immagine della mappa */
     .map-visual {
+        flex: 1;                     /* prendi tutto lo spazio sopra i controlli */
+        min-height: 0;               /* fondamentale per impedire che scavalchi i margini se l'immagine è gigante */
         display: flex;
-        justify-content: flex-start; /* Allinea a sinistra */
-        align-items: flex-start; /* Anima verso l'alto */
+        justify-content: flex-start;
+        align-items: flex-start;
         width: 100%;
-        max-height: 60vh; /* la mappa non supera mai 60% dell'altezza dello schermo */
         margin-bottom: 20px;
     }
 
