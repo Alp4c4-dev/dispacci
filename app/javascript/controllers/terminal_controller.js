@@ -647,9 +647,10 @@ export default class extends Controller {
 
     // simbolo personalizzabile
     indicator.textContent = " ▼"
+    indicator.style.color = "#0aff0a"
 
     // Un po' di stile per farlo lampeggiare
-    indicator.style.animation = "blink 1s step-end infinite"
+    indicator.style.animation = "blink 0.5s step-end infinite"
 
     // Appendi l'indicatore all'ultima riga appena stampata
     const lastLine = this.screenTarget.lastElementChild
