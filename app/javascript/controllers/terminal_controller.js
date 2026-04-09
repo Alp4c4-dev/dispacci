@@ -49,7 +49,7 @@ export default class extends Controller {
 
     // Listener per chiusura scheda/browser (Beacon API)
     this.onPageHide = () => {
-      // Spara il raggio solo se c'è un utente effettivamente loggato
+      // solo se c'è un utente effettivamente loggato
       if (this.currentUser) {
         const formData = new FormData()
 
@@ -954,6 +954,19 @@ export default class extends Controller {
     event?.preventDefault()
     event?.stopPropagation()
 
+    // Se l'interfaccia è in pausa (freccia lampeggiante), l'Invio sblocca il testo
+    if (this.isWaitingForInput) {
+      this.resumePrinting()
+      return
+    }
+
+    // Se l'interfaccia sta stampando , l'Invio salta l'animazione
+    if (this.isPrinting) {
+      this.skipPrinting = true
+      return
+    }
+
+    // Comportamento normale: invia il comando al server
     const command = this.promptTarget.value.trim()
     this.promptTarget.value = ""
     await this.handleCommand(command)

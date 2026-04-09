@@ -118,7 +118,8 @@ class CommandsController < ApplicationController
         "- help",
         "- logout",
         "- ping",
-        "- whoami"
+        "- whoami",
+        "- cronologia"
       ]
     when "esplicite"
       sys_payload = SystemPayload.find_by(key: "esplicite")
@@ -291,6 +292,28 @@ class CommandsController < ApplicationController
       [ "Sei autenticatə come #{current_user.username}." ]
     when "ping"
       [ "pong" ]
+    when "cronologia"
+      # Recupera gli ultimi 10 comandi digitati dall'utente, dal più recente al più vecchio
+      recent_attempts = current_user.command_attempts.order(created_at: :desc).limit(10)
+
+      if recent_attempts.empty?
+        [ "Nessun comando in memoria." ]
+      else
+        # Prepariamo la lista da stampare
+        lines = [ "--- ULTIMI 10 COMANDI ---", "" ]
+
+        # Usiamo .reverse per stamparli in ordine cronologico logico di lettura
+        # (il più vecchio in alto, il più recente in basso)
+        recent_attempts.reverse.each do |attempt|
+          # Formattazione base, es: "[14:30:22] /resistenza"
+          time_str = attempt.created_at.in_time_zone("Rome").strftime("%H:%M:%S")
+          lines << "[#{time_str}] /#{attempt.keyword_input}"
+        end
+
+        {
+          items: lines.map { |line| { type: "text", text: line, style: "payload" } }
+        }
+      end
     when "stop"
       start_time = session[:timer_started_at]
       if start_time.nil?

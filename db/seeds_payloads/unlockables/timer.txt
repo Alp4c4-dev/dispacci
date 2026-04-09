@@ -1,9 +1,4 @@
-Avvio timer di disconnessione in corso...
-
+Avvio timer di disconnessione in corso.
 Digita stop per completare correttamente la donazione.
-Esegui un comando qualsiasi per interrompere il timer.
-Esci dall'app, cambia scheda o effettua qualunque altra azione per interrompere il timer.
-
-Oppure non fare niente.
-
+Attenzione! Per ragioni di sicurezza, il timer si interrompe in caso di esecuzione di altri comandi o apertura di altri siti/app. Non fare niente.
 Posa il telefono, libera il tempo, dacci una mano.
