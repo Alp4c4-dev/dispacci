@@ -293,18 +293,21 @@ class CommandsController < ApplicationController
     when "ping"
       [ "pong" ]
     when "cronologia"
-      # Recupera gli ultimi 10 comandi digitati dall'utente, dal più recente al più vecchio
-      recent_attempts = current_user.command_attempts.order(created_at: :desc).limit(10)
+      # Array dei comandi automatici da nascondere dalla vista utente
+      hidden_cmds = %w[sys_boot_first sys_boot_standard verify_coordinate_puzzle abort_timer]
+
+      # Recupera gli ultimi 10 comandi escludendo quelli di sistema
+      recent_attempts = current_user.command_attempts
+                                    .where.not(keyword_input: hidden_cmds)
+                                    .order(created_at: :desc)
+                                    .limit(10)
 
       if recent_attempts.empty?
         [ "Nessun comando in memoria." ]
       else
-        # Prepariamo la lista da stampare
         lines = [ "--- ULTIMI 10 COMANDI ---", "" ]
 
-        # Usiamo .reverse per stamparli in ordine cronologico logico di lettura
         recent_attempts.reverse.each do |attempt|
-          # Formattazione base, es: "[14:30:22] /resistenza"
           time_str = attempt.created_at.in_time_zone("Rome").strftime("%H:%M:%S")
           lines << "[#{time_str}] /#{attempt.keyword_input}"
         end
