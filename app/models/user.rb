@@ -7,6 +7,7 @@ class User < ApplicationRecord
   has_many :word_definitions, dependent: :destroy
   has_many :game_sessions, dependent: :destroy
   has_many :user_sessions, dependent: :destroy
+  has_many :command_attempts, dependent: :destroy
 
   validates :username, presence: true, uniqueness: true
 

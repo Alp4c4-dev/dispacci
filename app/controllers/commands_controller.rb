@@ -303,7 +303,6 @@ class CommandsController < ApplicationController
         lines = [ "--- ULTIMI 10 COMANDI ---", "" ]
 
         # Usiamo .reverse per stamparli in ordine cronologico logico di lettura
-        # (il più vecchio in alto, il più recente in basso)
         recent_attempts.reverse.each do |attempt|
           # Formattazione base, es: "[14:30:22] /resistenza"
           time_str = attempt.created_at.in_time_zone("Rome").strftime("%H:%M:%S")
