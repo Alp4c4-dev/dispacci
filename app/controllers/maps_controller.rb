@@ -15,6 +15,19 @@ class MapsController < ApplicationController
                            .where("LOWER(key) = ?", expected_key)
                            .first
 
+    # --- TRACCIAMENTO KPI ---
+    # 1. Aggiorna l'orologio dell'attività
+    current_user.update_column(:last_activity_at, Time.current)
+
+    # 2. Registra il tentativo digitato (giusto o sbagliato che sia)
+    CommandAttempt.create!(
+      user: current_user,
+      user_session_id: session[:user_session_id],
+      keyword_input: "#{coord.upcase} #{testo}",
+      keyword_id: "mappa_esterna",
+      is_correct: unlockable.present? # Se unlockable esiste, è true. Altrimenti false.
+    )
+
     if unlockable
       # Controllo preventivo: verifichiamo se l'utente ha già questo sblocco
       already_unlocked = current_user.user_unlocks.exists?(unlockable_id: unlockable.id)

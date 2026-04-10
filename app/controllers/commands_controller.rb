@@ -177,21 +177,38 @@ class CommandsController < ApplicationController
       expected_orario = "23:59"
 
       is_correct = false
+      user_input_string = "" # stringa per i KPI
 
       if guess_type == "coord"
         xy = pd[:xy].to_s.strip.downcase
         testo = pd[:testo].to_s.strip.downcase
+
+        user_input_string = "#{xy.upcase} #{testo}"
+
         if xy == expected_xy && testo == expected_testo
           is_correct = true
           session[:puzzle_coord_solved] = true
         end
       elsif guess_type == "time"
         orario = pd[:orario].to_s.strip
+
+        user_input_string = orario
+
         if orario == expected_orario
           is_correct = true
           session[:puzzle_time_solved] = true
         end
       end
+
+      # --- TRACCIAMENTO KPI ---
+      # Registriamo il tentativo esatto dell'utente nel database
+      CommandAttempt.create!(
+        user: current_user,
+        user_session_id: session[:user_session_id],
+        keyword_input: user_input_string,
+        keyword_id: "puzzle_coordinate", # un'etichetta per riconoscerlo nei CSV
+        is_correct: is_correct
+      )
 
       if is_correct
         # Se ENTRAMBI i sistemi sono stati risolti (secondo step)
