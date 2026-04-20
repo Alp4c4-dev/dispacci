@@ -371,7 +371,7 @@ class CommandsController < ApplicationController
       min_label = minutes == 1 ? "minuto" : "minuti"
       sec_label = seconds == 1 ? "secondo" : "secondi"
 
-      msg = "Timer interrotto correttamente.\nDonazione completata con successo.\nGrazie #{current_user.username}! Hai donato #{minutes} #{min_label} e #{seconds} #{sec_label}, ne faremo buon uso."
+      msg = "Grazie per la tua donazione #{current_user.username}! In tutto hai donato #{minutes} #{min_label} e #{seconds} #{sec_label}: i nostri obiettivi sono un pò più vicini grazie a te."
 
       {
         items: [ { type: "text", text: msg, style: "payload" } ],
