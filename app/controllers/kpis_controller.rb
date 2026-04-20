@@ -9,9 +9,6 @@ class KpisController < ApplicationController
       return render plain: "Accesso negato.", status: :unauthorized
     end
 
-    # pulizia sessioni zombie
-    # UserSession.cleanup_abandoned_sessions!
-
     # Se la richiesta contiene il parametro per scaricare il CSV
     if params[:format] == "csv" && params[:table].present?
       send_data generate_csv(params[:table]),
