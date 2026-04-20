@@ -68,7 +68,10 @@ system_rows = [
   # messaggi di avvio
   { key: "boot_first", kind: "text", payload: payload_for.call("system/Testa.txt") },
   { key: "boot_standard", kind: "text", payload: payload_for.call("system/boot_standard.txt") },
-  { key: "esplicite", kind: "text", payload: payload_for.call("system/esplicite.txt") }
+  { key: "esplicite", kind: "text", payload: payload_for.call("system/esplicite.txt") },
+
+  # altri
+  { key: "join", kind: "text", payload: payload_for.call("system/join.txt") }
 ]
 
 # Inserisce o aggiorna i record nel database usando la chiave come riferimento univoco

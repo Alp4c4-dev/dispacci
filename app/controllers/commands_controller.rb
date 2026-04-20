@@ -128,6 +128,16 @@ class CommandsController < ApplicationController
       items = render_generic_items(sys_payload&.kind || "text", text, style: "payload")
 
       { items: items }
+    when "join"
+      sys_payload = SystemPayload.find_by(key: "join")
+
+      fallback = "C'è stato un problema con le procedure interne, ti chiediamo di riprovare a breve."
+
+      text = sys_payload ? sys_payload.payload : fallback
+
+      items = render_generic_items(sys_payload&.kind || "text", text, style: "payload")
+
+      { items: items }
     when "sys_boot_first"
       sys_payload = SystemPayload.find_by(key: "boot_first")
       name = current_user.username || "Ribelle"
