@@ -10,7 +10,7 @@ class KpisController < ApplicationController
     end
 
     # pulizia sessioni zombie
-    UserSession.cleanup_abandoned_sessions!
+    # UserSession.cleanup_abandoned_sessions!
 
     # Se la richiesta contiene il parametro per scaricare il CSV
     if params[:format] == "csv" && params[:table].present?
