@@ -3,11 +3,7 @@
 one:
   user: one
   seconds: 1
-  started_at: 2026-01-15 10:15:51
-  ended_at: 2026-01-15 10:15:51
 
 two:
   user: two
   seconds: 1
-  started_at: 2026-01-15 10:15:51
-  ended_at: 2026-01-15 10:15:51

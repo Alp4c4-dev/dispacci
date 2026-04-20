@@ -72,3 +72,5 @@ group :production do
 end
 
 gem "bcrypt", "~> 3.1"
+
+gem "csv", "~> 3.3"
