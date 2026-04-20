@@ -13,11 +13,13 @@ class SessionsController < ApplicationController
     if user.authenticate(password)
       session[:user_id] = user.id
 
-      user_session = UserSession.create!(user: user, started_at: Time.current)
+      # Memorizziamo l'inizio sessione solo nella RAM del browser, non nel DB
+      session[:session_started_at] = Time.current
+
+      user_session = UserSession.create!(user: user)
       session[:user_session_id] = user_session.id
+
       user.update!(
-        last_login_at: Time.current,
-        last_activity_at: Time.current,
         total_sessions_count: (user.total_sessions_count || 0) + 1
       )
 
@@ -49,13 +51,19 @@ class SessionsController < ApplicationController
     if session[:user_session_id]
       user_session = UserSession.find_by(id: session[:user_session_id])
       if user_session
-        duration = (Time.current - user_session.started_at).to_i
-        user_session.update!(ended_at: Time.current, duration_seconds: duration)
+        # Calcoliamo la durata usando il dato tenuto in RAM
+        if session[:session_started_at]
+          duration = (Time.current - session[:session_started_at].to_time).to_i
+        else
+          duration = 0
+        end
+        user_session.update!(duration_seconds: duration)
       end
     end
 
     session.delete(:user_id)
     session.delete(:user_session_id)
+    session.delete(:session_started_at)
     render json: { ok: true }
   end
 end

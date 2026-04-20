@@ -4,10 +4,8 @@ class DonationsController < ApplicationController
     return render json: { ok: false, error: "Non autenticato" }, status: :unauthorized unless user
 
     seconds = params[:seconds].to_i
-    started_at = parse_time(params[:started_at])
-    ended_at   = parse_time(params[:ended_at])
 
-    donation = user.donations.new(seconds: seconds, started_at: started_at, ended_at: ended_at)
+    donation = user.donations.new(seconds: seconds)
 
     if donation.save
       total = user.donations.sum(:seconds)

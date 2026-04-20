@@ -62,29 +62,29 @@ class KpisController < ApplicationController
     CSV.generate(headers: true) do |csv|
       case table
       when "users"
-        csv << [ "ID", "Username", "Primo Accesso", "Ultimo Login", "Ultima Attivita", "Totale Sessioni" ]
+        csv << [ "ID", "Username", "Primo Accesso", "Totale Sessioni" ]
         User.find_each do |u|
-          csv << [ u.id, u.username, u.first_seen_at, u.last_login_at, u.last_activity_at, u.total_sessions_count ]
+          csv << [ u.id, u.username, u.first_seen_at, u.total_sessions_count ]
         end
       when "sessions"
-        csv << [ "ID Sessione", "ID Utente", "Username", "Inizio", "Fine", "Durata (secondi)" ]
+        csv << [ "ID Sessione", "ID Utente", "Username", "Durata (secondi)" ]
         UserSession.includes(:user).find_each do |s|
-          csv << [ s.id, s.user_id, s.user&.username, s.started_at, s.ended_at, s.duration_seconds ]
+          csv << [ s.id, s.user_id, s.user&.username, s.duration_seconds ]
         end
       when "attempts"
-        csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Parola Inserita", "Esito (Corretto?)", "Data" ]
+        csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Parola Inserita", "Esito (Corretto?)" ]
         CommandAttempt.includes(:user).find_each do |a|
-          csv << [ a.id, a.user_id, a.user&.username, a.user_session_id, a.keyword_input, a.is_correct ? "SI" : "NO", a.created_at ]
+          csv << [ a.id, a.user_id, a.user&.username, a.user_session_id, a.keyword_input, a.is_correct ? "SI" : "NO" ]
         end
       when "donations"
-        csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Secondi Donati", "Inizio", "Fine", "Completata" ]
+        csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Secondi Donati", "Completata" ]
         Donation.includes(:user).find_each do |d|
-          csv << [ d.id, d.user_id, d.user&.username, d.user_session_id, d.seconds, d.started_at, d.ended_at, d.completed ? "SI" : "NO" ]
+          csv << [ d.id, d.user_id, d.user&.username, d.user_session_id, d.seconds, d.completed ? "SI" : "NO" ]
         end
       when "breakout"
-        csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Gioco", "Punteggio (MB)", "Inizio", "Fine" ]
+        csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Gioco", "Punteggio (MB)" ]
         GameSession.includes(:user).find_each do |g|
-          csv << [ g.id, g.user_id, g.user&.username, g.user_session_id, g.game_key, g.score, g.started_at, g.ended_at ]
+          csv << [ g.id, g.user_id, g.user&.username, g.user_session_id, g.game_key, g.score ]
         end
       when "definitions"
         csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Parola", "Definizione", "Data Inserimento" ]
@@ -92,10 +92,9 @@ class KpisController < ApplicationController
           csv << [ w.id, w.user_id, w.user&.username, w.user_session_id, w.word, w.definition, w.created_at ]
         end
       when "unlocks"
-        csv << [ "ID Sblocco", "ID Utente", "Username", "Parola Chiave (Key)", "Categoria", "Data Sblocco" ]
-        # .includes() previene le query ridondanti al database ("N+1 queries")
+        csv << [ "ID Sblocco", "ID Utente", "Username", "Parola Chiave (Key)", "Categoria" ]
         UserUnlock.includes(:user, :unlockable).find_each do |uu|
-          csv << [ uu.id, uu.user_id, uu.user&.username, uu.unlockable&.key, uu.unlockable&.category, uu.created_at ]
+          csv << [ uu.id, uu.user_id, uu.user&.username, uu.unlockable&.key, uu.unlockable&.category ]
         end
       else
         csv << [ "Errore: Tabella non trovata" ]

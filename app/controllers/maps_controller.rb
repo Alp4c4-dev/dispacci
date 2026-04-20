@@ -15,11 +15,8 @@ class MapsController < ApplicationController
                            .where("LOWER(key) = ?", expected_key)
                            .first
 
-    # --- TRACCIAMENTO KPI ---
-    # 1. Aggiorna l'orologio dell'attività
-    current_user.update_column(:last_activity_at, Time.current)
 
-    # 2. Registra il tentativo digitato (giusto o sbagliato che sia)
+    # Registra il tentativo digitato (giusto o sbagliato che sia)
     CommandAttempt.create!(
       user: current_user,
       user_session_id: session[:user_session_id],

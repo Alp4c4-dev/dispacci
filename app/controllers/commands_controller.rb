@@ -9,9 +9,6 @@ class CommandsController < ApplicationController
   def create
     cmd = params[:command].to_s.strip
 
-    # KPI: update activity
-    current_user.update_column(:last_activity_at, Time.current)
-
     result =
       if cmd.empty?
         { lines: [ "(vuoto)" ] }
@@ -310,13 +307,12 @@ class CommandsController < ApplicationController
     when "ping"
       [ "pong" ]
     when "cronologia"
-      # Array dei comandi automatici da nascondere dalla vista utente
       hidden_cmds = %w[sys_boot_first sys_boot_standard verify_coordinate_puzzle abort_timer]
 
-      # Recupera gli ultimi 10 comandi escludendo quelli di sistema
+      # Usa id: :desc dato che created_at non c'è più
       recent_attempts = current_user.command_attempts
                                     .where.not(keyword_input: hidden_cmds)
-                                    .order(created_at: :desc)
+                                    .order(id: :desc)
                                     .limit(10)
 
       if recent_attempts.empty?
@@ -325,8 +321,7 @@ class CommandsController < ApplicationController
         lines = [ "--- ULTIMI 10 COMANDI ---", "" ]
 
         recent_attempts.reverse.each do |attempt|
-          time_str = attempt.created_at.in_time_zone("Rome").strftime("%H:%M:%S")
-          lines << "[#{time_str}] /#{attempt.keyword_input}"
+          lines << "- /#{attempt.keyword_input}"
         end
 
         {
@@ -356,9 +351,7 @@ class CommandsController < ApplicationController
         user: current_user,
         user_session_id: session[:user_session_id],
         completed: true,
-        seconds: duration,
-        started_at: start_time,
-        ended_at: Time.current
+        seconds: duration
       )
       session.delete(:timer_started_at)
 
