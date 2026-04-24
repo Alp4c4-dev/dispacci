@@ -103,4 +103,11 @@ Rails.application.configure do
     openssl_verify_mode:  "none"
   }
   # --- FINE PARAMETRI SMTP ---
+
+  # --- OTTIMIZZAZIONE INFRASTRUTTURA ---
+  # Usa la RAM invece del database per la cache (risolve il crash del login)
+  config.cache_store = :memory_store
+
+  # Usa i thread interni per i job (risolve i futuri crash dell'invio email)
+  config.active_job.queue_adapter = :async
 end
