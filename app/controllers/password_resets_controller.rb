@@ -4,7 +4,7 @@ class PasswordResetsController < ApplicationController
 
     if user.present?
       token = user.generate_token_for(:password_reset)
-      UserMailer.password_reset_email(user, token).deliver_later
+      UserMailer.password_reset_email(user, token).deliver_now
     end
 
     render json: {
