@@ -21,6 +21,9 @@ Rails.application.routes.draw do
   get "/verify_email/:token", to: "registrations#verify", as: :verify_email
   post "/verify_portal_code", to: "registrations#verify_code"
 
+  # informativa privacy
+  get "privacy", to: "static_pages#privacy", as: :privacy
+
   post "/commands", to: "commands#create"
 
   post "/donations", to: "donations#create"
