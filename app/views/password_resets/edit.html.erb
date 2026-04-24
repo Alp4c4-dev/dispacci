@@ -1,0 +1,37 @@
+<div class="full-screen">
+  <div class="box">
+    <h1>Imposta Nuova Password</h1>
+
+    <%# Se l'utente ha inserito password che non coincidono, mostriamo l'errore %>
+    <% if @user.errors.any? %>
+      <div class="error" style="margin-bottom: 15px;">
+        <% @user.errors.full_messages.each do |msg| %>
+          <div><%= msg %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Il form che punta all'azione "update" tramite PATCH %>
+    <%= form_with(model: @user, url: password_reset_path(params[:token]), method: :patch, data: { turbo: false }) do |f| %>
+
+      <label>
+        Nuova Password
+        <%= f.password_field :password, required: true %>
+      </label>
+
+      <label>
+        Conferma Nuova Password
+        <%= f.password_field :password_confirmation, required: true %>
+      </label>
+
+      <%# Essendo un tag button dentro .box, prenderà in automatico il tuo stile verde %>
+      <%= f.submit "Salva e Accedi", style: "margin-top: 20px;" %>
+    <% end %>
+
+    <%# Link di fallback per annullare e tornare al login %>
+    <div style="text-align: center; margin-top: 15px;">
+      <a href="<%= root_path %>" style="color: #0aff0a; font-size: 0.85em; text-decoration: none;">Torna al Login</a>
+    </div>
+
+  </div>
+</div>

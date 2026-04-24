@@ -13,6 +13,10 @@ Rails.application.routes.draw do
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy"
 
+  post "/password_resets", to: "password_resets#create"
+  get "/password_resets/:token/edit", to: "password_resets#edit", as: :edit_password_reset
+  patch "/password_resets/:token", to: "password_resets#update", as: :password_reset
+
   post "/register", to: "registrations#create"
   get "/verify_email/:token", to: "registrations#verify", as: :verify_email
   post "/verify_portal_code", to: "registrations#verify_code"
