@@ -12,6 +12,9 @@ export default class extends Controller {
     "registrationScreen", "regUsername", "regEmail", "regPassword",
     "regPasswordConfirm", "regPrivacy", "regPromo", "regError",
 
+    // --- SCHERMATA RECUPERO PASSWORD ---
+    "forgotPasswordScreen", "forgotEmail", "forgotMessage",
+
     // --- TERMINALE CORE ---
     "terminal", "screen", "prompt"
   ]
@@ -274,14 +277,18 @@ export default class extends Controller {
     this.codeErrorTarget.textContent = ""
     this.loginErrorTarget.textContent = ""
     if (this.hasRegErrorTarget) this.regErrorTarget.innerText = ""
+    if (this.hasForgotMessageTarget) this.forgotMessageTarget.innerText = ""
 
     // Pulisce i campi di input sensibili
     this.codeInputTarget.value = ""
     this.loginPasswordTarget.value = ""
+    if (this.hasForgotEmailTarget) this.forgotEmailTarget.value = ""
 
     // Ripristina la visualizzazione corretta delle finestre
     this.codeScreenTarget.style.display = "none"
     if (this.hasRegistrationScreenTarget) this.registrationScreenTarget.style.display = "none"
+    if (this.hasForgotPasswordScreenTarget) this.forgotPasswordScreenTarget.style.display = "none"
+
     this.loginScreenTarget.style.display = "flex"
 
     // Rimette il cursore pronto per un nuovo login
@@ -365,13 +372,39 @@ export default class extends Controller {
   }
 
   forgotPassword(event) {
-    event.preventDefault();
-    // Per ora mostriamo un messaggio semplice, poi implementeremo il flusso mail
-    this.loginErrorTarget.innerText = "Contattare l'amministratore di sistema per il reset manuale o attendere il modulo di ripristino automatico.";
+    event?.preventDefault();
+    this.loginScreenTarget.style.display = "none";
+    this.forgotPasswordScreenTarget.style.display = "flex";
+    this.forgotEmailTarget.focus();
+  }
+
+  async submitForgotPassword(event) {
+    event?.preventDefault();
+    this.forgotMessageTarget.innerText = "";
+    this.forgotMessageTarget.style.color = ""; // reset color in caso di messaggi di successo verdi
+
+    const email = this.forgotEmailTarget.value.trim();
+    if (!email) {
+      this.forgotMessageTarget.innerText = "Inserisci un indirizzo email valido.";
+      this.forgotMessageTarget.style.color = "red";
+      return;
+    }
+
+    // Effettuiamo la chiamata al futuro endpoint Rails
+    const { ok, data } = await this.postJSON("/password_resets", { email: email });
+
+    if (ok && data.ok) {
+      this.forgotMessageTarget.innerText = data.message || "Se l'email è registrata, riceverai un link a breve.";
+      this.forgotMessageTarget.style.color = "#0aff0a"; // Verde hacker
+      this.forgotEmailTarget.value = "";
+    } else {
+      this.forgotMessageTarget.innerText = data?.error || "Si è verificato un errore.";
+      this.forgotMessageTarget.style.color = "red";
+    }
   }
 
   // -----------------------------
-  // LOGIN / REGISTRAZIONE (via Rails)
+  // LOGIN / REGISTRAZIONE
   // -----------------------------
   async attemptLogin(event) {
     event?.preventDefault()

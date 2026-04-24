@@ -71,6 +71,22 @@
     </div>
   </div>
 
+  <div id="forgot-password-screen" class="full-screen" data-terminal-target="forgotPasswordScreen" style="display:none;">
+    <div class="box">
+      <h1>Recupero Password</h1>
+      <p style="font-size: 0.9em; margin-bottom: 15px;">Inserisci l'indirizzo email associato al tuo account. Ti invieremo un link per impostare una nuova password.</p>
+
+      <label>Email
+        <input type="email" data-terminal-target="forgotEmail" data-action="keydown.enter->terminal#submitForgotPassword" />
+      </label>
+
+      <button type="button" style="margin-top: 20px;" data-action="click->terminal#submitForgotPassword">Invia link di ripristino</button>
+      <button type="button" class="link" data-action="click->terminal#backToLogin">Annulla</button>
+
+      <div class="error" data-terminal-target="forgotMessage" style="margin-top: 10px;"></div>
+    </div>
+  </div>
+
   <div id="terminal" data-terminal-target="terminal" style="display:none;">
     <div id="screen" data-terminal-target="screen"></div>
 
