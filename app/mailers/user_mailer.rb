@@ -10,7 +10,7 @@ class UserMailer < ApplicationMailer
 
   def password_reset_email(user, token)
     @user = user
-    @url = edit_password_reset_url(token: token)
+    @token = token # Fondamentale per generare l'URL nella view
 
     mail(to: @user.email, subject: "Reset password")
   end
