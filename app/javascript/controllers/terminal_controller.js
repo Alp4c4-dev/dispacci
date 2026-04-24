@@ -2,8 +2,17 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [
+    // --- SCHERMATA LOGIN ---
     "loginScreen", "loginUsername", "loginPassword", "loginError",
+
+    // --- SCHERMATA CODICE ---
     "codeScreen", "codeInput", "codeError",
+
+    // --- SCHERMATA DI REGISTRAZIONE ---
+    "registrationScreen", "regUsername", "regEmail", "regPassword",
+    "regPasswordConfirm", "regPrivacy", "regPromo", "regError",
+
+    // --- TERMINALE CORE ---
     "terminal", "screen", "prompt"
   ]
 
@@ -145,22 +154,9 @@ export default class extends Controller {
     }
   }
 
-  backToLogin() {
-    this.pendingUser = null
-    this.codeErrorTarget.textContent = ""
-    this.codeInputTarget.value = ""
-
-    this.codeScreenTarget.style.display = "none"
-    this.loginScreenTarget.style.display = "flex"
-    this.loginPasswordTarget.value = ""
-    this.loginErrorTarget.textContent = ""
-    this.loginUsernameTarget.focus()
-  }
-
   resetToLogin() {
     // Stato
     this.currentUser = null
-    this.pendingUser = null
     this.firstTime = false
     this.terminalShown = false
 
@@ -202,9 +198,16 @@ export default class extends Controller {
     if (ok && data.ok) {
       this.currentUser = { username: data.username }
       this.firstTime = !!data.first_time
+
       this.loginScreenTarget.style.display = "none"
-      this.codeScreenTarget.style.display = "none"
-      this.showTerminal()
+
+      // Controllo per il caricamento pagina: se non ha il codice, mostra la schermata "TESTA"
+      if (data.needs_code) {
+        this.codeScreenTarget.style.display = "flex"
+      } else {
+        this.codeScreenTarget.style.display = "none"
+        this.showTerminal()
+      }
     }
   }
 
@@ -258,6 +261,114 @@ export default class extends Controller {
     return { ok: res.ok, data }
   }
 
+  // --- NAVIGAZIONE SCHERMATE ---
+
+  showRegistrationScreen() {
+    this.loginScreenTarget.style.display = "none";
+    this.registrationScreenTarget.style.display = "flex";
+    this.regUsernameTarget.focus();
+  }
+
+  backToLogin() {
+    // Pulisce eventuali errori visibili
+    this.codeErrorTarget.textContent = ""
+    this.loginErrorTarget.textContent = ""
+    if (this.hasRegErrorTarget) this.regErrorTarget.innerText = ""
+
+    // Pulisce i campi di input sensibili
+    this.codeInputTarget.value = ""
+    this.loginPasswordTarget.value = ""
+
+    // Ripristina la visualizzazione corretta delle finestre
+    this.codeScreenTarget.style.display = "none"
+    if (this.hasRegistrationScreenTarget) this.registrationScreenTarget.style.display = "none"
+    this.loginScreenTarget.style.display = "flex"
+
+    // Rimette il cursore pronto per un nuovo login
+    this.loginUsernameTarget.focus()
+  }
+
+  async verifyCode() {
+    const code = this.codeInputTarget.value.trim().toUpperCase();
+
+    // Invia il codice al server per validarlo e salvare lo sblocco
+    const { ok, data } = await this.postJSON("/verify_portal_code", { code: code });
+
+    if (ok && data && data.ok) {
+      this.codeScreenTarget.style.display = "none";
+      this.showTerminal();
+    } else {
+      this.codeErrorTarget.innerText = data?.error || "Codice di sicurezza errato.";
+    }
+  }
+
+  // --- INVIO DATI REGISTRAZIONE ---
+
+  async submitRegistration() {
+    // Pulisce eventuali errori precedenti
+    this.regErrorTarget.innerText = "";
+
+    // Controlli rapidi lato client (UX)
+    if (!this.regPrivacyTarget.checked) {
+      this.regErrorTarget.innerText = "Devi accettare l'informativa per procedere.";
+      return;
+    }
+
+    if (this.regPasswordTarget.value !== this.regPasswordConfirmTarget.value) {
+      this.regErrorTarget.innerText = "Le password non coincidono.";
+      return;
+    }
+
+    // Raccoglie i dati
+    const payload = {
+      user: {
+        username: this.regUsernameTarget.value.trim(),
+        email: this.regEmailTarget.value.trim(),
+        password: this.regPasswordTarget.value,
+        password_confirmation: this.regPasswordConfirmTarget.value,
+        accetta_informativa: this.regPrivacyTarget.checked,
+        consenso_promozionale: this.regPromoTarget.checked
+      }
+    };
+
+    try {
+      const response = await fetch("/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        alert(result.message);
+
+        // Pulisce i campi e torna al login
+        this.regUsernameTarget.value = "";
+        this.regEmailTarget.value = "";
+        this.regPasswordTarget.value = "";
+        this.regPasswordConfirmTarget.value = "";
+        this.regPrivacyTarget.checked = false;
+        this.regPromoTarget.checked = false;
+
+        this.backToLogin();
+      } else {
+        this.regErrorTarget.innerText = result.error;
+      }
+    } catch (error) {
+      console.error("Errore durante la registrazione:", error);
+      this.regErrorTarget.innerText = "Si è verificato un errore di rete. Riprova.";
+    }
+  }
+
+  forgotPassword(event) {
+    event.preventDefault();
+    // Per ora mostriamo un messaggio semplice, poi implementeremo il flusso mail
+    this.loginErrorTarget.innerText = "Contattare l'amministratore di sistema per il reset manuale o attendere il modulo di ripristino automatico.";
+  }
 
   // -----------------------------
   // LOGIN / REGISTRAZIONE (via Rails)
@@ -281,8 +392,16 @@ export default class extends Controller {
     if (ok && data.ok) {
       this.currentUser = { username: data.username }
       this.firstTime = !!data.first_time
+
       this.loginScreenTarget.style.display = "none"
-      this.showTerminal()
+
+      // La vera magia dell'inversione:
+      if (data.needs_code) {
+        this.codeScreenTarget.style.display = "flex"
+        setTimeout(() => this.codeInputTarget.focus(), 20)
+      } else {
+        this.showTerminal()
+      }
       return
     }
 
@@ -292,70 +411,14 @@ export default class extends Controller {
       return
     }
 
-    // Solo se l'utente non esiste, proponi registrazione (schermata codice)
+    // Se l'utente non esiste nel database
     if (data && data.code === "user_not_found") {
-      this.pendingUser = { username, password }
-      this.loginScreenTarget.style.display = "none"
-      this.codeScreenTarget.style.display = "flex"
-      this.codeErrorTarget.textContent = ""
-
-      this.codeInputTarget.value = ""
-      setTimeout(() => this.codeInputTarget.focus(), 20)
+      this.loginErrorTarget.textContent = "Utente inesistente."
       return
     }
 
     // fallback generico
     this.loginErrorTarget.textContent = data?.error || "Errore nel server"
-  }
-
-  async attemptRegistration(event) {
-    event?.preventDefault()
-    event?.stopPropagation()
-
-    this.codeErrorTarget.textContent = ""
-
-    if (!this.pendingUser) {
-      this.codeErrorTarget.textContent = "Errore interno: nessun utente in registrazione"
-      return
-    }
-
-    // 1. Leggi il valore da input
-    const rawCode = this.codeInputTarget.value || ""
-    const code = rawCode.trim().toUpperCase()
-
-    // 2. Validazioni base
-    if (!code) {
-      this.codeErrorTarget.textContent = "Inserire la parola d'ordine"
-      return
-    }
-
-    if (code.length < 5) {
-      this.codeErrorTarget.textContent = "Parola d'ordine troppo breve"
-      return
-    }
-
-    if (code.length > 5) {
-      this.codeErrorTarget.textContent = "Parola d'ordine troppo lunga"
-      return
-    }
-
-    // 3. Invia al server
-    const { ok, data } = await this.postJSON("/register", {
-      username: this.pendingUser.username,
-      password: this.pendingUser.password,
-      code // Invia la parola intera
-    })
-
-    if (ok && data.ok) {
-      this.currentUser = { username: data.username }
-      this.firstTime = !!data.first_time
-      this.pendingUser = null
-
-      this.codeScreenTarget.style.display = "none"
-      this.showTerminal()
-    } else {
-      this.codeErrorTarget.textContent = data.error || "Parola d'ordine errata"
-    }
   }
 
   // -----------------------------

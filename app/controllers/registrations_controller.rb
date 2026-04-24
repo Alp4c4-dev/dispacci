@@ -2,33 +2,49 @@ class RegistrationsController < ApplicationController
   FIXED_CODE = "TESTA"
 
   def create
-    username = params[:username].to_s.strip
-    password = params[:password].to_s
-    code     = params[:code].to_s.strip.upcase
+    user_params = params.require(:user).permit(
+      :username, :password, :password_confirmation,
+      :email, :consenso_promozionale, :accetta_informativa
+    )
 
-    if code != FIXED_CODE
-      return render json: { ok: false, error: "Codice non valido" }, status: :unprocessable_entity
-    end
-
-    user = User.new(username: username, password: password, password_confirmation: password)
+    user = User.new(user_params)
 
     if user.save
-      session[:user_id] = user.id
-
-      user_session = UserSession.create!(user: user, started_at: Time.current)
-      session[:user_session_id] = user_session.id
-      user.update!(
-        last_login_at: Time.current,
-        last_activity_at: Time.current,
-        total_sessions_count: 1
-      )
-
-      first_time = user.first_seen_at.nil?
-      user.update!(first_seen_at: Time.current) if first_time
-
-      render json: { ok: true, username: user.username, first_time: first_time }
+      verification_token = user.signed_id(purpose: :email_verification, expires_in: 24.hours)
+      UserMailer.verification_email(user, verification_token).deliver_later
+      render json: { ok: true, message: "Profilo creato. Attivalo tramite l'email che riceverai." }
     else
+      # Se manca la spunta o ci sono altri errori, Rails restituisce il messaggio in automatico
       render json: { ok: false, error: user.errors.full_messages.first }, status: :unprocessable_entity
+    end
+  end
+
+  def verify
+    user = User.find_signed(params[:token], purpose: :email_verification)
+    if user
+      user.update!(email_verified: true)
+      redirect_to root_path, notice: "Account attivato correttamente."
+    else
+      redirect_to root_path, alert: "Link scaduto o non valido."
+    end
+  end
+
+  def verify_code
+    # Richiama il metodo current_user che abbiamo aggiornato in ApplicationController
+    user = current_user
+
+    # Blocco di sicurezza nel caso in cui la sessione sia inesistente
+    if user.nil?
+      return render json: { ok: false, error: "Sessione non valida o scaduta. Effettua di nuovo il login." }, status: :unauthorized
+    end
+
+    if params[:code].to_s.strip.upcase == "TESTA"
+      # Salva nel DB che l'utente ha superato la prova
+      user.update!(code_verified: true)
+
+      render json: { ok: true }
+    else
+      render json: { ok: false, error: "Codice non riconosciuto." }
     end
   end
 end

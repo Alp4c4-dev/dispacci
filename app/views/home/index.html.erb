@@ -6,56 +6,68 @@
 
       <label>
         Username
-        <input id="login-username"
-               type="text"
-               autocomplete="off"
-               autocorrect="off"
-               autocapitalize="none"
-               spellcheck="false"
-               enterkeyhint="next"
-               data-terminal-target="loginUsername"
-               data-action="keydown.enter->terminal#attemptLogin" />
+        <input type="text" data-terminal-target="loginUsername" data-action="keydown.enter->terminal#attemptLogin" />
       </label>
 
       <label>
         Password
-        <input id="login-password"
-               type="password"
-               autocomplete="off"
-               enterkeyhint="go"
-               data-terminal-target="loginPassword"
-               data-action="keydown.enter->terminal#attemptLogin" />
+        <input type="password" data-terminal-target="loginPassword" data-action="keydown.enter->terminal#attemptLogin" />
       </label>
 
-      <button id="login-button" type="button" data-action="click->terminal#attemptLogin">Continua</button>
+      <div style="text-align: right; margin-bottom: 20px;">
+        <a href="#" class="forgot-password-link" data-action="click->terminal#forgotPassword">Password dimenticata?</a>
+      </div>
 
-      <div id="login-error" class="error" data-terminal-target="loginError"></div>
+      <button type="button" data-action="click->terminal#attemptLogin">Continua</button>
+
+      <p style="margin-top: 20px; font-size: 0.8em; color: #0aff0a;">Nuovə utente?</p>
+      <button type="button" class="secondary" data-action="click->terminal#showRegistrationScreen">Registrati</button>
+
+      <div class="error" data-terminal-target="loginError"></div>
     </div>
   </div>
 
   <div id="code-screen" class="full-screen" data-terminal-target="codeScreen" style="display:none;">
     <div class="box">
-      <h1>Registrazione</h1>
-
+      <h1>Codice di Sicurezza</h1>
       <label>
-        Parola d'ordine
-        <input id="registration-code"
-               type="text"
-               autocomplete="off"
-               autocorrect="off"
-               autocapitalize="characters"
-               spellcheck="false"
-               enterkeyhint="go"
+        Inserire parola d'ordine
+        <input type="text"
                style="text-transform: uppercase;"
                data-terminal-target="codeInput"
-               data-action="keydown.enter->terminal#attemptRegistration" />
+               data-action="keydown.enter->terminal#verifyCode" />
       </label>
+      <button type="button" data-action="click->terminal#verifyCode">Verifica Codice</button>
+      <button type="button" class="link" data-action="click->terminal#backToLogin">Indietro</button>
+      <div class="error" data-terminal-target="codeError"></div>
+    </div>
+  </div>
 
-      <button id="code-button" type="button" data-action="click->terminal#attemptRegistration">Conferma e accedi</button>
+  <div id="registration-screen" class="full-screen" data-terminal-target="registrationScreen" style="display:none;">
+    <div class="box">
+      <h1>Registrati</h1>
 
-      <button type="button" data-action="click->terminal#backToLogin">Indietro</button>
+      <label>Username <input type="text" data-terminal-target="regUsername" /></label>
+      <label>Email <input type="email" data-terminal-target="regEmail" /></label>
+      <label>Password <input type="password" data-terminal-target="regPassword" /></label>
+      <label>Conferma Password <input type="password" data-terminal-target="regPasswordConfirm" /></label>
 
-      <div id="code-error" class="error" data-terminal-target="codeError"></div>
+      <div class="checkbox-group" style="text-align: left; margin-top: 15px;">
+        <label>
+          <input type="checkbox" data-terminal-target="regPrivacy" />
+          <span>Accetto l' <a href="#" style="color: #0aff0a;">informativa privacy</a> (Obbligatorio)</span>
+        </label>
+
+        <label>
+          <input type="checkbox" data-terminal-target="regPromo" />
+          <span>Consenso comunicazioni operative</span>
+        </label>
+      </div>
+
+      <button type="button" style="margin-top: 20px;" data-action="click->terminal#submitRegistration">Registrati</button>
+      <button type="button" class="link" data-action="click->terminal#backToLogin">Annulla</button>
+
+      <div class="error" data-terminal-target="regError" style="color: red; margin-top: 10px;"></div>
     </div>
   </div>
 

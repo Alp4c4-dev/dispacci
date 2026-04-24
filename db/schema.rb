@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_074307) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_21_131603) do
   create_table "command_attempts", force: :cascade do |t|
     t.boolean "is_correct", default: false
     t.string "keyword_id"
@@ -43,6 +43,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_074307) do
     t.index ["user_id", "game_key"], name: "index_game_sessions_on_user_id_and_game_key"
     t.index ["user_id"], name: "index_game_sessions_on_user_id"
     t.index ["user_session_id"], name: "index_game_sessions_on_user_session_id"
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
   create_table "system_payloads", force: :cascade do |t|
@@ -80,12 +89,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_074307) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.boolean "code_verified", default: false
+    t.boolean "consenso_promozionale", default: false
+    t.datetime "consenso_promozionale_at"
     t.datetime "created_at", null: false
+    t.string "email"
+    t.boolean "email_verified", default: false
     t.datetime "first_seen_at"
     t.string "password_digest"
     t.integer "total_sessions_count", default: 0
     t.datetime "updated_at", null: false
     t.string "username"
+    t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
@@ -107,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_074307) do
   add_foreign_key "donations", "users"
   add_foreign_key "game_sessions", "user_sessions"
   add_foreign_key "game_sessions", "users"
+  add_foreign_key "sessions", "users"
   add_foreign_key "user_sessions", "users"
   add_foreign_key "user_unlocks", "unlockables"
   add_foreign_key "user_unlocks", "users"

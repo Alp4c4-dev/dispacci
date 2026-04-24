@@ -10,7 +10,15 @@ class ApplicationController < ActionController::Base
   end
 
   def current_user
+    # Evita di interrogare il database più volte nella stessa richiesta
     return @current_user if defined?(@current_user)
-    @current_user = User.find_by(id: session[:user_id])
+
+    # Cerca la sessione tecnica tramite il cookie firmato, poi ricava l'utente
+    if cookies.signed[:session_id]
+      app_session = Session.find_by(id: cookies.signed[:session_id])
+      @current_user = app_session&.user
+    else
+      @current_user = nil
+    end
   end
 end

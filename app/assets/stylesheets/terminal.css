@@ -124,6 +124,20 @@
         color: #0eff0e;
     }
 
+    /* Recupero pwd */
+    .forgot-password-link {
+        color: #0aff0a;
+        font-size: 0.75em;
+        text-decoration: none;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .forgot-password-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
     /* Schermata inserimento codice */
     #code-screen {
         display: none;
@@ -177,6 +191,48 @@
         margin-top: 4px;
         border-radius: 0;           /* Niente angoli tondi su mobile */
         -webkit-appearance: none;   /* Rimuove stile nativo iOS */
+    }
+
+    /* Correzione specifica per le checkbox nel modulo registrazione */
+    .checkbox-group input[type="checkbox"] {
+        width: auto !important;      /* Rimuove il 100% di larghezza */
+        height: auto !important;     /* Mantiene le proporzioni quadrate */
+        margin-top: 0;               /* Allinea meglio al testo */
+        cursor: pointer;
+        -webkit-appearance: checkbox; /* Forza l'aspetto standard della spunta su iOS/Mac */
+        appearance: checkbox;
+    }
+
+    /* Opzionale: rende l'intera riga della privacy più facile da cliccare */
+    .checkbox-group label {
+        display: flex !important;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        width: fit-content; /* Impedisce al label di coprire zone vuote */
+    }
+
+    /* Fix per allineamento Checkbox e Testo */
+    .checkbox-group label {
+        display: flex !important;      /* Allinea checkbox e testo sulla stessa riga */
+        align-items: flex-start;       /* Allinea la spunta in alto rispetto al testo */
+        gap: 10px;                     /* Spazio tra quadratino e testo */
+        margin-bottom: 12px;           /* Distanza tra le due righe di consenso */
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 18px !important;        /* Dimensione fissa per il quadratino */
+        height: 18px !important;
+        flex-shrink: 0;                /* Impedisce alla checkbox di schiacciarsi */
+        margin-top: 2px;               /* Centratura ottica con la prima riga di testo */
+    }
+
+    .checkbox-group span {
+        font-size: 13px;               /* Testo leggermente più piccolo per stare nel box */
+        line-height: 1.4;              /* Migliora la leggibilità se il testo va a capo */
+        white-space: normal;           /* Permette al testo di andare a capo correttamente */
     }
 
     /* Stile specifico per l'inserimento della Parola d'Ordine */

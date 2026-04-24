@@ -14,6 +14,8 @@ Rails.application.routes.draw do
   delete "/logout", to: "sessions#destroy"
 
   post "/register", to: "registrations#create"
+  get "/verify_email/:token", to: "registrations#verify", as: :verify_email
+  post "/verify_portal_code", to: "registrations#verify_code"
 
   post "/commands", to: "commands#create"
 
