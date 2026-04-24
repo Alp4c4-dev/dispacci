@@ -80,16 +80,16 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.perform_deliveries = true
   config.action_mailer.raise_delivery_errors = true
-  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
 
   config.action_mailer.smtp_settings = {
-    address:              'smtp.resend.com',
+    address:              "smtp.resend.com",
     port:                 465,
-    user_name:            'resend',          # Questo rimane scritto così, letterale
-    password:             ENV['RESEND_API_KEY'], # Questo dice a Rails di guardare nel file .env
+    user_name:            "resend",          # Questo rimane scritto così, letterale
+    password:             ENV["RESEND_API_KEY"], # Questo dice a Rails di guardare nel file .env
     authentication:       :plain,
     tls:                  true,
-    openssl_verify_mode:  'none'
+    openssl_verify_mode:  "none"
   }
   # --- FINE PARAMETRI SMTP ---
 end
