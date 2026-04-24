@@ -1,4 +1,5 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "from@example.com"
+  # Il mittente deve obbligatoriamente finire con @account.dispaccidalfronte.org
+  default from: "Dispacci dal Fronte <no-reply@account.dispaccidalfronte.org>"
   layout "mailer"
 end
