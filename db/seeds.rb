@@ -70,6 +70,12 @@ system_rows = [
   { key: "boot_standard", kind: "text", payload: payload_for.call("system/boot_standard.txt") },
   { key: "esplicite", kind: "text", payload: payload_for.call("system/esplicite.txt") },
 
+  # coordinate
+  { key: "puzzle_coord_intro", kind: "text", payload: payload_for.call("system/coordinate_intro.txt") },
+  { key: "puzzle_coord_patial_time", kind: "text", payload: payload_for.call("system/coordinate_parziale_time.txt") },
+  { key: "puzzle_coord_partial_coord", kind: "text", payload: payload_for.call("system/coordinate_parziale_coord.txt") },
+  { key: "puzzle_coord_success", kind: "text", payload: payload_for.call("system/coordinate_success.txt") },
+
   # altri
   { key: "join", kind: "text", payload: payload_for.call("system/join.txt") }
 ]

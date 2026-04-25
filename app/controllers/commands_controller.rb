@@ -6,6 +6,9 @@ class CommandsController < ApplicationController
   CATEGORY_COMMANDS = %w[Dossier Galleria Armeria Mappa].freeze
   DEFINITION_KEYWORDS = %w[solitudine].freeze
 
+  SUPPORT_MSG = "\n\nTi invitiamo a segnalare qualunque problema riscontrato scrivendo a:".freeze
+  SUPPORT_EMAIL = "dispaccidalfronte@protonmail.com".freeze
+
   def create
     cmd = params[:command].to_s.strip
 
@@ -40,6 +43,21 @@ class CommandsController < ApplicationController
   end
 
   private
+
+  def missing_payload_error(key)
+    [
+      {
+        type: "text",
+        text: "[ERRORE DI SISTEMA: Contenuto '#{key}' non trovato]\nIl comando o la parola inserita è corretta, ma il file di testo associato risulta mancante o corrotto.#{SUPPORT_MSG}",
+        style: "error-text"
+      },
+      {
+        type: "link",
+        text: SUPPORT_EMAIL,
+        url: "mailto:#{SUPPORT_EMAIL}"
+      }
+    ]
+  end
 
   def dispatch_command(cmd)
     cmd_norm = cmd.downcase
@@ -121,50 +139,63 @@ class CommandsController < ApplicationController
     when "esplicite"
       sys_payload = SystemPayload.find_by(key: "esplicite")
 
-      fallback = "Sì esatto, hai capito come funziona."
-
-      text = sys_payload ? sys_payload.payload : fallback
-
-      items = render_generic_items(sys_payload&.kind || "text", text, style: "payload")
+      items =
+      if sys_payload&.payload.present?
+                text = sys_payload.payload
+                render_generic_items(sys_payload.kind, text, style: "payload")
+      else
+                missing_payload_error("esplicite")
+      end
 
       { items: items }
     when "join"
       sys_payload = SystemPayload.find_by(key: "join")
 
-      fallback = "C'è stato un problema con le procedure interne, ti chiediamo di riprovare a breve."
-
-      text = sys_payload ? sys_payload.payload : fallback
-
-      items = render_generic_items(sys_payload&.kind || "text", text, style: "payload")
+      items =
+      if sys_payload&.payload.present?
+                text = sys_payload.payload
+                render_generic_items(sys_payload.kind, text, style: "payload")
+      else
+                missing_payload_error("join")
+      end
 
       { items: items }
     when "sys_boot_first"
       sys_payload = SystemPayload.find_by(key: "boot_first")
       name = current_user.username || "Ribelle"
 
-      fallback = "Ciao #{name}, benvenutə nel Portale! \n\nQuesta è la nostra base digitale: il punto dell'internet in cui ci siamo rifugiati per tenere viva la Resistenza.\nDa adesso ne fai parte.\n\nUsa le parole chiave che trovi nel Volume 0 per accedere ai contenuti extra e aiutarci davvero.\n\nUn unico avvertimento: navigando questo nero in solitudine ci si potrebbe smarrire e convincere di essere insignificanti, ma è tutto il contrario.\n\nOgni tua azione, che ti piaccia o meno, cambierà per sempre la storia di questa Resistenza.\n\nPortale avviato."
-
-      text = sys_payload ? sys_payload.payload.gsub("{{name}}", name) : fallback
-
-      # Passiamo style: nil per mantenere il verde del terminale
-      items = render_generic_items(sys_payload&.kind || "text", text, style: nil)
+      items =
+      if sys_payload&.payload.present?
+                text = sys_payload.payload.gsub("{{name}}", name)
+                render_generic_items(sys_payload.kind, text, style: nil)
+      else
+                missing_payload_error("boot_first")
+      end
 
       { items: items }
     when "sys_boot_standard"
       sys_payload = SystemPayload.find_by(key: "boot_standard")
       name = current_user.username || "Ribelle"
 
-      fallback = "Ciao #{name}. Portale avviato."
-
-      text = sys_payload ? sys_payload.payload.gsub("{{name}}", name) : fallback
-
-      # Passiamo style: nil per mantenere il verde del terminale
-      items = render_generic_items(sys_payload&.kind || "text", text, style: nil)
+      items =
+      if sys_payload&.payload.present?
+                text = sys_payload.payload.gsub("{{name}}", name)
+                render_generic_items(sys_payload.kind, text, style: nil)
+      else
+                missing_payload_error("sys_boot_standard")
+      end
 
       { items: items }
     when "coordinate"
       sys_payload = SystemPayload.find_by(key: "puzzle_coord_intro")
-      items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Il Portale contiene 1 informazione critica: le coordinate del nostro prossimo incontro.\nÈ vitale che tu ci sia, ma per ovvie ragioni abbiamo dovuto nascondere luogo e orario. Inseriscili qui quando li avrai trovati.", style: "payload" } ]
+
+      items =
+      if sys_payload&.payload.present?
+                text = sys_payload.payload
+                render_generic_items(sys_payload.kind, text, style: "payload")
+      else
+                missing_payload_error("puzzle_coord_intro")
+      end
 
       {
         items: items,
@@ -218,33 +249,51 @@ class CommandsController < ApplicationController
       )
 
       if is_correct
-        # Se ENTRAMBI i sistemi sono stati risolti (secondo step)
         if session[:puzzle_coord_solved] && session[:puzzle_time_solved]
-
-          # 1) Prende il messaggio parziale relativo a quello che ha appena inserito
           partial_key = guess_type == "coord" ? "puzzle_coord_partial_time" : "puzzle_coord_partial_coord"
-          partial_fallback = guess_type == "coord" ? "Complimenti! Hai trovato il luogo dell'incontro." : "Complimenti! Hai trovato l'orario dell'incontro."
           partial_payload = SystemPayload.find_by(key: partial_key)
-          items = partial_payload ? render_generic_items(partial_payload.kind, partial_payload.payload) : [ { type: "text", text: partial_fallback, style: "payload" } ]
 
-          # 2) Ci accoda il messaggio finale di completamento
+          items =
+          if partial_payload&.payload.present?
+                    render_generic_items(partial_payload.kind, partial_payload.payload)
+          else
+                    missing_payload_error(partial_key)
+          end
+
           success_payload = SystemPayload.find_by(key: "puzzle_coord_success")
-          success_fallback = "Ce l'hai fatta! Questo punto di arrivo può essere il punto di partenza dei Dispacci ed è merito tuo che stai provando questa interazione e sei arrivatə fin qui. Davvero grazie per il tuo tempo! Ne faremo buon uso."
-          success_items = success_payload ? render_generic_items(success_payload.kind, success_payload.payload) : [ { type: "text", text: success_fallback, style: "payload" } ]
+
+          success_items =
+          if success_payload&.payload.present?
+                            render_generic_items(success_payload.kind, success_payload.payload)
+          else
+                            missing_payload_error("puzzle_coord_success")
+          end
 
           {
             items: items + success_items,
             meta: { action: "close_coordinate_puzzle" }
           }
         else
-          # Se ha risolto SOLO il primo dei due (primo step)
           if guess_type == "coord"
             sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_time")
-            items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Complimenti! Hai trovato il luogo dell'incontro.", style: "payload" } ]
+
+            items =
+            if sys_payload&.payload.present?
+                      render_generic_items(sys_payload.kind, sys_payload.payload)
+            else
+                      missing_payload_error("puzzle_coord_partial_time")
+            end
             { items: items, meta: { action: "lock_coord_inputs" } }
           else
             sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_coord")
-            items = sys_payload ? render_generic_items(sys_payload.kind, sys_payload.payload) : [ { type: "text", text: "Complimenti! Hai trovato l'orario dell'incontro.", style: "payload" } ]
+
+            items =
+            if sys_payload&.payload.present?
+                      render_generic_items(sys_payload.kind, sys_payload.payload)
+            else
+                      missing_payload_error("puzzle_coord_partial_coord")
+            end
+
             { items: items, meta: { action: "lock_time_inputs" } }
           end
         end
@@ -501,7 +550,7 @@ class CommandsController < ApplicationController
     kind = unlockable.kind.to_s
     payload = unlockable.payload.to_s
 
-    return [] if payload.blank?
+    return missing_payload_error(unlockable.key) if payload.blank?
 
     case kind
     when "text", "command"
