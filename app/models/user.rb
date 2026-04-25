@@ -26,6 +26,9 @@ class User < ApplicationRecord
   # Callback: gestisce dinamicamente il timestamp del marketing
   before_save :set_consenso_timestamp, if: :consenso_promozionale_changed?
 
+  # Informativa privacy: non registra orario
+  before_create :strip_time_from_created_at
+
   def stats
     total_seconds = donations.sum(:seconds) || 0
     total_score = game_sessions.sum(:score) || 0
@@ -63,5 +66,10 @@ class User < ApplicationRecord
   def set_consenso_timestamp
     # Se true salva l'ora, se false cancella la data precedente
     self.consenso_promozionale_at = consenso_promozionale ? Time.current : nil
+  end
+
+  def strip_time_from_created_at
+    # Forza il timestamp alla mezzanotte del giorno corrente
+    self.created_at = Time.current.beginning_of_day
   end
 end
