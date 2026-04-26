@@ -786,6 +786,7 @@ export default class extends Controller {
           // Controlliamo il flag che abbiamo messo nel backend
           const isInteractive = item.interactive === true
 
+          // 1. Ciclo di stampa delle singole righe
           for (let i = 0; i < lines.length; i++) {
             const l = lines[i]
 
@@ -795,20 +796,17 @@ export default class extends Controller {
             const extraClass = (item.style === "payload") ? "payload-text" : ""
             await this.printLineTypewriter(printable, { charDelay, extraClass })
 
-            // SE è un file txt interattivo
-            if (isInteractive) {
-              // Resettiamo skipPrinting: se l'utente ha saltato il paragrafo corrente,
-              // il prossimo ricomincerà con l'effetto macchina da scrivere.
-              this.skipPrinting = false
-
-              // Pausa solo se la riga NON è vuota. Se è un "a capo" lo salta.
-              if (l.trim() !== "") {
-                await this.waitForUser()
-              }
-            } else {
-              // Se NON è interattivo (es. /help), applica solo un ritardo minimo tra le righe
-              if (!this.skipPrinting) await this.sleep(lineDelay)
+            // Mantiene la fluidità applicando il ritardo standard tra una riga e l'altra
+            if (!this.skipPrinting) {
+              await this.sleep(lineDelay)
             }
+          }
+
+          // 2. Fine del blocco di testo. Se interattivo, mette in pausa.
+          if (isInteractive) {
+            // Resettiamo skipPrinting in modo che il paragrafo successivo riparta a velocità normale
+            this.skipPrinting = false
+            await this.waitForUser()
           }
 
         } else {
