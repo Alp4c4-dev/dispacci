@@ -202,7 +202,7 @@ class CommandsController < ApplicationController
         meta: {
           action: "start_coordinate_puzzle",
           # Passiamo al frontend i dati solo se l'utente li ha già indovinati
-          solved_coord: session[:puzzle_coord_solved] ? { xy: "C3", testo: "Leopardi" } : nil,
+          solved_coord: session[:puzzle_coord_solved] ? { xy: "C3", testo: "Via delle Ginestre" } : nil,
           solved_time: session[:puzzle_time_solved] ? { orario: "23:59" } : nil
         }
       }
@@ -211,7 +211,7 @@ class CommandsController < ApplicationController
       guess_type = pd[:guess_type] # riceve 'coord' o 'time' dal frontend
 
       expected_xy = "c3"
-      expected_testo = "leopardi"
+      expected_testo = "via delle ginestre"
       expected_orario = "23:59"
 
       is_correct = false
