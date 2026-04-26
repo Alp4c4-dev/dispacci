@@ -46,7 +46,15 @@ rows = [
   { key: "timer", category: "Armeria", kind: "command", payload: payload_for.call("unlockables/timer.txt") },
   { key: "solitudine", category: "Armeria", kind: "command", payload: payload_for.call("unlockables/solitudine.txt") },
   { key: "Aurelius", category: "Armeria", kind: "command", payload: payload_for.call("unlockables/Aurelius.txt") },
-  { key: "html", category: "Armeria", kind: "text", payload: payload_for.call("unlockables/html.txt") }
+  { key: "html", category: "Armeria", kind: "text", payload: payload_for.call("unlockables/html.txt") },
+
+  # ----------------
+  # Adesivi
+  # ----------------
+  { key: "Respira Piano", category: "Adesivi", kind: "text", payload: payload_for.call("unlockables/respira_15.txt") },
+  { key: "Piangi Duro", category: "Adesivi", kind: "text", payload: payload_for.call("unlockables/piangi_30.txt") },
+  { key: "Ridi Forte", category: "Adesivi", kind: "text", payload: payload_for.call("unlockables/ridi_60.txt") }
+
 ]
 
 # Inserisce o aggiorna i record nel database usando la chiave come riferimento univoco
@@ -63,6 +71,7 @@ system_rows = [
   { key: "dossier", kind: "text", payload: payload_for.call("system/Dossier.txt") },
   { key: "armeria", kind: "text", payload: payload_for.call("system/Armeria.txt") },
   { key: "galleria", kind: "text", payload: payload_for.call("system/Galleria.txt") },
+  { key: "adesivi", kind: "text", payload: payload_for.call("system/Adesivi.txt") },
   { key: "mappa", kind: "text", payload: payload_for.call("system/Mappa.txt") },
 
   # messaggi di avvio
@@ -72,7 +81,7 @@ system_rows = [
 
   # coordinate
   { key: "puzzle_coord_intro", kind: "text", payload: payload_for.call("system/coordinate_intro.txt") },
-  { key: "puzzle_coord_patial_time", kind: "text", payload: payload_for.call("system/coordinate_parziale_time.txt") },
+  { key: "puzzle_coord_partial_time", kind: "text", payload: payload_for.call("system/coordinate_parziale_time.txt") },
   { key: "puzzle_coord_partial_coord", kind: "text", payload: payload_for.call("system/coordinate_parziale_coord.txt") },
   { key: "puzzle_coord_success", kind: "text", payload: payload_for.call("system/coordinate_success.txt") },
 

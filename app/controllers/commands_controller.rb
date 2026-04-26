@@ -3,7 +3,7 @@ require "set"
 class CommandsController < ApplicationController
   before_action :require_login!
 
-  CATEGORY_COMMANDS = %w[Dossier Galleria Armeria Mappa].freeze
+  CATEGORY_COMMANDS = %w[Dossier Galleria Armeria Mappa Adesivi].freeze
   DEFINITION_KEYWORDS = %w[solitudine].freeze
 
   SUPPORT_MSG = "\n\nTi invitiamo a segnalare qualunque problema riscontrato scrivendo a:".freeze
@@ -422,8 +422,52 @@ class CommandsController < ApplicationController
 
       msg = "Grazie per la tua donazione #{current_user.username}! In tutto hai donato #{minutes} #{min_label} e #{seconds} #{sec_label}: i nostri obiettivi sono un pò più vicini grazie a te."
 
+      items = [ { type: "text", text: msg, style: "payload" } ]
+
+      # --- LOGICA SBLOCCO ADESIVI (Tempo Totale Accumulato) ---
+      total_donated = current_user.donations.where(completed: true).sum(:seconds)
+
+      # Definisci qui le chiavi che userai poi nel seeds.rb
+      adesivi_thresholds = [
+        { sec: 90, key: "Respira Piano" },
+        { sec: 180, key: "Piangi Duro" },
+        { sec: 360, key: "Ridi Forte" }
+      ]
+
+      adesivi_thresholds.each do |th|
+        if total_donated >= th[:sec]
+          # Cerca l'adesivo nel DB
+          unlockable = Unlockable.where("LOWER(key) = ?", th[:key].downcase).where(category: "Adesivi").first
+
+          # Se l'adesivo esiste e l'utente NON lo ha ancora sbloccato
+          if unlockable && !current_user.user_unlocks.exists?(unlockable_id: unlockable.id)
+            current_user.user_unlocks.create!(unlockable: unlockable)
+
+            # Conta quanti adesivi ha in totale adesso
+            tot_sbloccati = current_user.user_unlocks.joins(:unlockable).where(unlockables: { category: "Adesivi" }).count
+
+            # Calcola il totale degli adesivi esistenti nel database
+            total = Unlockable.where(category: "Adesivi").count
+
+            # 2. ACCODIAMO IL MESSAGGIO DELLO SBLOCCO (ora items esiste)
+            items << {
+              type: "text",
+              text: "Nuovo Adesivo sbloccato!\nAdesivi sbloccati #{tot_sbloccati}/#{total}",
+              style: "payload"
+            }
+
+            # 3. ACCODIAMO IMMAGINE/TESTO DELL'ADESIVO
+            if unlockable.payload.present?
+              items.concat(render_generic_items(unlockable.kind, unlockable.payload))
+            else
+              items.concat(missing_payload_error(unlockable.key))
+            end
+          end
+        end
+      end
+
       {
-        items: [ { type: "text", text: msg, style: "payload" } ],
+        items: items,
         meta: { action: "stop_timer", donated_seconds: duration }
       }
     when "abort_timer"

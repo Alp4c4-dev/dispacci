@@ -1,4 +1,4 @@
-Ciao {{name}}, bentornatə nel Portale! 
+Ciao {{name}}, bentornatə nel Portale! 
 
 Digita /resistenza per visualizzare i progressi che hai/abbiamo fatto finora. 
 Digita /cronologia per rivedere e le ultime parole chiave che hai utilizzato.
