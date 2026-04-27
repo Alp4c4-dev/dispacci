@@ -413,7 +413,7 @@ export default class extends Controller {
 
   showResendScreen(event) {
     event?.preventDefault();
-    this.loginScreenTarget.style.display = "none";
+    this.registrationScreenTarget.style.display = "none";
     this.resendScreenTarget.style.display = "flex";
     this.resendEmailTarget.focus();
   }

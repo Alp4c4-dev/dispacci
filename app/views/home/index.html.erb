@@ -23,10 +23,6 @@
       <p style="margin-top: 20px; font-size: 0.8em; color: #0aff0a;">Nuovə utente?</p>
       <button type="button" class="secondary" data-action="click->terminal#showRegistrationScreen">Registrati</button>
 
-      <p style="margin-top: 10px; font-size: 0.8em;">
-        <a href="#" style="color: #0a880a;" data-action="click->terminal#showResendScreen">Non hai ricevuto l'email di validazione?</a>
-      </p>
-
       <div class="error" data-terminal-target="loginError"></div>
     </div>
   </div>
@@ -70,6 +66,10 @@
 
       <button type="button" style="margin-top: 20px;" data-action="click->terminal#submitRegistration">Registrati</button>
       <button type="button" class="link" data-action="click->terminal#backToLogin">Annulla</button>
+
+      <p style="margin-top: 10px; font-size: 0.8em;">
+        <a href="#" style="color: #0a880a;" data-action="click->terminal#showResendScreen">Non hai ricevuto l'email di validazione?</a>
+      </p>
 
       <div class="error" data-terminal-target="regError" style="color: red; margin-top: 10px;"></div>
     </div>
