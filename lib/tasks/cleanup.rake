@@ -5,7 +5,7 @@ namespace :db do
     threshold = 60.days.ago
 
     # Eseguiamo la cancellazione
-    deleted_count = CommandAttempt.where('created_at < ?', threshold).delete_all
+    deleted_count = CommandAttempt.where("created_at < ?", threshold).delete_all
 
     puts "Operazione completata: rimossi #{deleted_count} tentativi obsoleti (antecedenti al #{threshold.strftime('%d/%m/%Y')})."
   end

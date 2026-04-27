@@ -23,6 +23,10 @@
       <p style="margin-top: 20px; font-size: 0.8em; color: #0aff0a;">Nuovə utente?</p>
       <button type="button" class="secondary" data-action="click->terminal#showRegistrationScreen">Registrati</button>
 
+      <p style="margin-top: 10px; font-size: 0.8em;">
+        <a href="#" style="color: #0a880a;" data-action="click->terminal#showResendScreen">Non hai ricevuto l'email di validazione?</a>
+      </p>
+
       <div class="error" data-terminal-target="loginError"></div>
     </div>
   </div>
@@ -84,6 +88,22 @@
       <button type="button" class="link" data-action="click->terminal#backToLogin">Annulla</button>
 
       <div class="error" data-terminal-target="forgotMessage" style="margin-top: 10px;"></div>
+    </div>
+  </div>
+
+  <div id="resend-verification-screen" class="full-screen" data-terminal-target="resendScreen" style="display:none;">
+    <div class="box">
+      <h1>Recupero Verifica</h1>
+      <p style="font-size: 0.9em; margin-bottom: 15px;">Inserisci l'indirizzo email usato in fase di registrazione per ricevere un nuovo link di attivazione.</p>
+
+      <label>Email
+        <input type="email" data-terminal-target="resendEmail" data-action="keydown.enter->terminal#submitResendVerification" />
+      </label>
+
+      <button type="button" style="margin-top: 20px;" data-action="click->terminal#submitResendVerification">Invia nuovo link</button>
+      <button type="button" class="link" data-action="click->terminal#backToLogin">Annulla</button>
+
+      <div class="error" data-terminal-target="resendMessage" style="margin-top: 10px;"></div>
     </div>
   </div>
 

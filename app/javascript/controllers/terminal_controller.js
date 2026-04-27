@@ -15,6 +15,9 @@ export default class extends Controller {
     // --- SCHERMATA RECUPERO PASSWORD ---
     "forgotPasswordScreen", "forgotEmail", "forgotMessage",
 
+    // --- RE-INVIO MAIL REGISTRAZIONE ---
+    "resendScreen", "resendEmail", "resendMessage",
+
     // --- TERMINALE CORE ---
     "terminal", "screen", "prompt"
   ]
@@ -278,16 +281,19 @@ export default class extends Controller {
     this.loginErrorTarget.textContent = ""
     if (this.hasRegErrorTarget) this.regErrorTarget.innerText = ""
     if (this.hasForgotMessageTarget) this.forgotMessageTarget.innerText = ""
+    if (this.hasResendMessageTarget) this.resendMessageTarget.innerText = ""
 
     // Pulisce i campi di input sensibili
     this.codeInputTarget.value = ""
     this.loginPasswordTarget.value = ""
     if (this.hasForgotEmailTarget) this.forgotEmailTarget.value = ""
+    if (this.hasResendEmailTarget) this.resendEmailTarget.value = ""
 
     // Ripristina la visualizzazione corretta delle finestre
     this.codeScreenTarget.style.display = "none"
     if (this.hasRegistrationScreenTarget) this.registrationScreenTarget.style.display = "none"
     if (this.hasForgotPasswordScreenTarget) this.forgotPasswordScreenTarget.style.display = "none"
+    if (this.hasResendScreenTarget) this.resendScreenTarget.style.display = "none"
 
     this.loginScreenTarget.style.display = "flex"
 
@@ -400,6 +406,40 @@ export default class extends Controller {
     } else {
       this.forgotMessageTarget.innerText = data?.error || "Si è verificato un errore.";
       this.forgotMessageTarget.style.color = "red";
+    }
+  }
+
+  // --- RE-INVIO MAIL VERIFICA ---
+
+  showResendScreen(event) {
+    event?.preventDefault();
+    this.loginScreenTarget.style.display = "none";
+    this.resendScreenTarget.style.display = "flex";
+    this.resendEmailTarget.focus();
+  }
+
+  async submitResendVerification(event) {
+    event?.preventDefault();
+    this.resendMessageTarget.innerText = "";
+    this.resendMessageTarget.style.color = ""; // reset color
+
+    const email = this.resendEmailTarget.value.trim();
+    if (!email) {
+      this.resendMessageTarget.innerText = "Inserisci un indirizzo email valido.";
+      this.resendMessageTarget.style.color = "red";
+      return;
+    }
+
+    // Usa il tuo helper postJSON
+    const { ok, data } = await this.postJSON("/resend_verification", { email: email });
+
+    if (ok && data.ok) {
+      this.resendMessageTarget.innerText = data.message || "Link inviato con successo.";
+      this.resendMessageTarget.style.color = "#0aff0a"; // Verde hacker
+      this.resendEmailTarget.value = "";
+    } else {
+      this.resendMessageTarget.innerText = data?.error || "Si è verificato un errore.";
+      this.resendMessageTarget.style.color = "red";
     }
   }
 
