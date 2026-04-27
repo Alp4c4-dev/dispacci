@@ -1,6 +1,4 @@
 class VerificationsController < ApplicationController
-  skip_before_action :require_login!, only: [ :create ]
-
   def create
     email = params[:email].to_s.downcase.strip
     @user = User.find_by(email: email)
