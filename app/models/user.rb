@@ -39,6 +39,8 @@ class User < ApplicationRecord
     galleria_total = Unlockable.where(category: "Galleria").count
     armeria_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: "Armeria" }).count
     armeria_total = Unlockable.where(category: "Armeria").count
+    adesivi_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: "Adesivi" }).count
+    adesivi_total = Unlockable.where(category: "Adesivi").count
     mappa_unlocked = user_unlocks.joins(:unlockable).where(unlockables: { category: [ "Mappa", "Mappa_Segreta" ] }).count
     mappa_total = Unlockable.where(category: "Mappa").count
 
@@ -51,8 +53,26 @@ class User < ApplicationRecord
       dossier: [ dossier_unlocked, dossier_total ],
       galleria: [ galleria_unlocked, galleria_total ],
       armeria: [ armeria_unlocked, armeria_total ],
-      mappa: [ mappa_unlocked, mappa_total ]
+      adesivi: [ adesivi_unlocked, adesivi_total ],
+      mappa: [ mappa_unlocked, mappa_total ],
+      missione_principale: coordinate_puzzle_completed?
     }
+  end
+
+  # Controlla se la missione principale è stata completata
+  def coordinate_puzzle_completed?
+    has_coord = command_attemps.where(keyword_id: "puzzle_coordinate", is_correct: true).where("LOWER(keyword_input) LIKE ?", "%ginestre%").exists?
+    has_time = command_attempts.where(keyword_id: "puzzle_coordinate", is_correct: true, keyword_input: "23:59").exists?
+    has_coord && has_time
+  end
+
+  # Metodo di classe (self.) per contare tutte le persone che hanno risolto il puzzle
+  def self.count_coordinate_puzzle_completed
+    users_with_coord = CommandAttempt.where(keyword_id: "puzzle_coordinate", is_correct: true).where("LOWER(keyword_input) LIKE ?", "%ginestre%").select(:user_id)
+    users_with_time = CommandAttempt.where(keyword_id: "puzzle_coordinate", is_correct: true, keyword_input: "23:59").select(:user_id)
+
+    # Intersezione: conta gli utenti presenti in entrambi i gruppi
+    where(id: users_with_coord).where(id: users_with_time).count
   end
 
   private

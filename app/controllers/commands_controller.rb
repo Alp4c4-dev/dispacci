@@ -303,22 +303,26 @@ class CommandsController < ApplicationController
     when "resistenza"
       # --- DATI UTENTE (calcolati in user.rb) ---
       s = current_user.stats
+      stato_missione_utente = s[:missione_principale] ? "Completata" : "Non completata"
 
       # --- DATI GLOBALI (Fronte della Resistenza) ---
 
-      # 1. Tempo Globale (Replichiamo la formattazione "minuti e secondi")
+      # 1. Missione principale globale
+      global_coordinate = User.count_coordinate_puzzle_completed
+
+      # 2. Tempo Globale (Replichiamo la formattazione "minuti e secondi")
       global_seconds = Donation.sum(:seconds)
       g_min = global_seconds / 60
       g_sec = global_seconds % 60
       global_time_str = "#{g_min} minut#{g_min == 1 ? "o" : "i"} e #{g_sec} second#{g_sec == 1 ? "o" : "i"}"
 
       # Target Tempo (Es. target 450 minuti per il volume)
-      target_min = 450
+      target_min = 45
 
-      # 2. Definizioni
+      # 3. Definizioni
       global_definitions = WordDefinition.count
 
-      # 3. Distruzione Dati
+      # 4. Distruzione Dati
       global_score = GameSession.sum(:score)
       global_mb = global_score
 
@@ -328,33 +332,33 @@ class CommandsController < ApplicationController
         "",
         "Ribelli arruolati: #{User.count}",
         "",
-        "---",
+        "STATO DELLE MISSIONI COLLETTIVE:",
         "",
-        "Stato delle missioni:",
+        "1. Missione Principale",
+        "N. ribelli all'appuntamento: #{global_coordinate}",
         "",
-        "1. Missione Tempo Libero - Gianchi",
-        "",
+        "2. Libera il Tempo (Gianchi)",
         "Totale tempo donato: #{global_time_str}",
         "Tempo necessario per pubblicare il prossimo volume: #{target_min} minuti",
         "",
-        "2. Missione Parole Nuove - Sussurro",
-        "",
+        "3. Armarsi di Parole (Sussurro)",
         "Vocabolo: Solitudine",
         "Definizioni raccolte: #{global_definitions}",
         "",
-        "3. Missione Ammazza il pupazzo - Alfiere",
-        "",
-        "MB Distrutti: #{global_mb} MB",
+        "4. Ammazza il coniglio (Alfiere)",
+        "MB Distrutti: #{global_mb}/1mld MB",
         "",
         "----LA TUA LOTTA----",
         "",
-        "Tempo donato: #{s[:donation_time]}", # Usa la tua formattazione da user.rb
+        "Missione Principale: #{stato_missione_utente}",
+        "Tempo donato: #{s[:donation_time]}",
         "Parole riconquistate: #{s[:definitions_count]}",
         "MB Distrutti: #{s[:data_destroyed_mb]} MB",
         "Codici sbloccati: #{s[:total_unlocked]}/#{s[:total_unlockables]}",
         "- Dossier: #{s[:dossier][0]}/#{s[:dossier][1]}",
         "- Galleria: #{s[:galleria][0]}/#{s[:galleria][1]}",
         "- Armeria: #{s[:armeria][0]}/#{s[:armeria][1]}",
+        "- Adesivi: #{s[:adesivi][0]}/#{s[:adesivi][1]}",
         "- Mappa: #{s[:mappa][0]}/#{s[:mappa][1]}"
       ]
 
@@ -414,9 +418,10 @@ class CommandsController < ApplicationController
       )
       session.delete(:timer_started_at)
 
-      # Calcolo il tempo trascorso per il messaggio a schermo
-      minutes = duration / 60
-      seconds = duration % 60
+      total_donated = current_user.donations.where(completed: true).sum(:seconds)
+
+      minutes = total_donated / 60
+      seconds = total_donated % 60
       min_label = minutes == 1 ? "minuto" : "minuti"
       sec_label = seconds == 1 ? "secondo" : "secondi"
 
@@ -425,7 +430,6 @@ class CommandsController < ApplicationController
       items = [ { type: "text", text: msg, style: "payload" } ]
 
       # --- LOGICA SBLOCCO ADESIVI (Tempo Totale Accumulato) ---
-      total_donated = current_user.donations.where(completed: true).sum(:seconds)
 
       # Definisci qui le chiavi che userai poi nel seeds.rb
       adesivi_thresholds = [
@@ -621,15 +625,16 @@ class CommandsController < ApplicationController
         ]
       end
 
-      parts.map do |part|
+      parts.map.with_index do |part, index|
+        # Controlliamo se siamo arrivati all'ultimo frammento
+        is_last_part = (index == parts.length - 1)
+
         if part.start_with?("IMAGE::")
-          # Se inizia con il prefisso magico, è un'immagine
           url = part.sub("IMAGE::", "").strip
           { type: "image", url: url }
         else
-          # Altrimenti è testo normale
-          # interactive: true per triggerare la pausa nel frontend
-          { type: "text", text: part, style: "payload", interactive: true }
+          # interactive è true SOLO se non siamo all'ultimo pezzo
+          { type: "text", text: part, style: "payload", interactive: !is_last_part }
         end
       end
 
@@ -654,14 +659,18 @@ class CommandsController < ApplicationController
     when "text", "command"
       parts = payload.split("[[NEXT]]").map(&:strip).reject(&:blank?)
 
-      parts.map do |part|
+      parts.map.with_index do |part, index|
+        is_last_part = (index == parts.length - 1)
+
         if part.start_with?("IMAGE::")
           url = part.sub("IMAGE::", "").strip
           { type: "image", url: url }
         else
           item = { type: "text", text: part }
-          item[:style] = style if style.present? # Applica lo stile solo se definito
-          item[:interactive] = true if interactive
+          item[:style] = style if style.present?
+
+          # Applica interactive: true SOLO se richiesto dalla funzione E non è l'ultimo pezzo
+          item[:interactive] = true if interactive && !is_last_part
           item
         end
       end
