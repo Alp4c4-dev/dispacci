@@ -250,7 +250,7 @@ class CommandsController < ApplicationController
 
       if is_correct
         if session[:puzzle_coord_solved] && session[:puzzle_time_solved]
-          partial_key = guess_type == "coord" ? "puzzle_coord_partial_time" : "puzzle_coord_partial_coord"
+          partial_key = guess_type == "coord" ? "puzzle_coord_partial_coord" : "puzzle_coord_partial_time"
           partial_payload = SystemPayload.find_by(key: partial_key)
 
           items =
@@ -275,7 +275,7 @@ class CommandsController < ApplicationController
           }
         else
           if guess_type == "coord"
-            sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_time")
+            sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_coord")
 
             items =
             if sys_payload&.payload.present?
@@ -285,13 +285,13 @@ class CommandsController < ApplicationController
             end
             { items: items, meta: { action: "lock_coord_inputs" } }
           else
-            sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_coord")
+            sys_payload = SystemPayload.find_by(key: "puzzle_coord_partial_time")
 
             items =
             if sys_payload&.payload.present?
                       render_generic_items(sys_payload.kind, sys_payload.payload)
             else
-                      missing_payload_error("puzzle_coord_partial_coord")
+                      missing_payload_error("puzzle_coord_partial_time")
             end
 
             { items: items, meta: { action: "lock_time_inputs" } }
