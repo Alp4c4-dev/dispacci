@@ -51,9 +51,9 @@ rows = [
   # ----------------
   # Adesivi
   # ----------------
-  { key: "Respira Piano", category: "Adesivi", kind: "text", payload: payload_for.call("unlockables/respira_15.txt") },
-  { key: "Piangi Duro", category: "Adesivi", kind: "text", payload: payload_for.call("unlockables/piangi_30.txt") },
-  { key: "Ridi Forte", category: "Adesivi", kind: "text", payload: payload_for.call("unlockables/ridi_60.txt") }
+  { key: "Respira Piano", category: "Adesivi", kind: "image", payload: payload_for.call("media/img/respira_15.webp") },
+  { key: "Piangi Duro", category: "Adesivi", kind: "image", payload: payload_for.call("media/img/piangi_30.webp") },
+  { key: "Ridi Forte", category: "Adesivi", kind: "image", payload: payload_for.call("media/img/ridi_60.webp") }
 
 ]
 

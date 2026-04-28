@@ -452,7 +452,7 @@ class CommandsController < ApplicationController
             # 2. ACCODIAMO IL MESSAGGIO DELLO SBLOCCO (ora items esiste)
             items << {
               type: "text",
-              text: "Nuovo Adesivo sbloccato!\nAdesivi sbloccati #{tot_sbloccati}/#{total}",
+              text: "Nuovo Adesivo acquisito!\nAdesivi collezionati #{tot_sbloccati}/#{total}.\nDigita /Adesivi per rivedere la tua collezione.",
               style: "payload"
             }
 
