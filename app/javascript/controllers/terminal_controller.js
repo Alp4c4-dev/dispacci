@@ -908,6 +908,8 @@ export default class extends Controller {
       this.updateTimerDisplay(elapsed)
     }, 10)
 
+    // Scrolla in basso per visualizzare timer
+    this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
   }
 
   async stopTimer(serverSeconds) {
