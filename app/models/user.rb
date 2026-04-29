@@ -61,7 +61,7 @@ class User < ApplicationRecord
 
   # Controlla se la missione principale è stata completata
   def coordinate_puzzle_completed?
-    has_coord = command_attemps.where(keyword_id: "puzzle_coordinate", is_correct: true).where("LOWER(keyword_input) LIKE ?", "%ginestre%").exists?
+    has_coord = command_attempts.where(keyword_id: "puzzle_coordinate", is_correct: true).where("LOWER(keyword_input) LIKE ?", "%ginestre%").exists?
     has_time = command_attempts.where(keyword_id: "puzzle_coordinate", is_correct: true, keyword_input: "23:59").exists?
     has_coord && has_time
   end
