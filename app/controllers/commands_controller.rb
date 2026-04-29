@@ -425,7 +425,7 @@ class CommandsController < ApplicationController
       min_label = minutes == 1 ? "minuto" : "minuti"
       sec_label = seconds == 1 ? "secondo" : "secondi"
 
-      msg = "Grazie per la tua donazione #{current_user.username}! In tutto hai donato #{minutes} #{min_label} e #{seconds} #{sec_label}: i nostri obiettivi sono un pò più vicini grazie a te."
+      msg = "Grazie per la tua donazione #{current_user.username}! In tutto hai donato #{minutes} #{min_label} e #{seconds} #{sec_label}: i nostri obiettivi sono un po' più vicini grazie a te."
 
       items = [ { type: "text", text: msg, style: "payload" } ]
 
@@ -447,20 +447,29 @@ class CommandsController < ApplicationController
           if unlockable && !current_user.user_unlocks.exists?(unlockable_id: unlockable.id)
             current_user.user_unlocks.create!(unlockable: unlockable)
 
+            # Calcola il totale dei codici sbloccati escludendo la mappa segreta
+            overall_count = current_user.user_unlocks.joins(:unlockable).where.not(unlockables: { category: "Mappa_Segreta" }).count
+            overall_total = Unlockable.where.not(category: "Mappa_Segreta").count
+
+            # Genera messaggio di sblocco generico
+            items << {
+              type: "text",
+              text: "Nuovo codice sbloccato!\nCodici sbloccati: #{overall_count}/#{overall_total}."
+            }
+
             # Conta quanti adesivi ha in totale adesso
             tot_sbloccati = current_user.user_unlocks.joins(:unlockable).where(unlockables: { category: "Adesivi" }).count
 
             # Calcola il totale degli adesivi esistenti nel database
             total = Unlockable.where(category: "Adesivi").count
 
-            # 2. ACCODIAMO IL MESSAGGIO DELLO SBLOCCO (ora items esiste)
+            # Genera il messaggio di sblocco specifico degli adesivi
             items << {
               type: "text",
-              text: "Nuovo Adesivo acquisito!\nAdesivi collezionati #{tot_sbloccati}/#{total}.\nDigita /Adesivi per rivedere la tua collezione.",
-              style: "payload"
+              text: "Nuovo Adesivo acquisito!\nAdesivi collezionati #{tot_sbloccati}/#{total}.\nDigita /Adesivi per rivedere la tua collezione."
             }
 
-            # 3. ACCODIAMO IMMAGINE/TESTO DELL'ADESIVO
+            # Accoda l'immagine dell'adesivo
             if unlockable.payload.present?
               items.concat(render_generic_items(unlockable.kind, unlockable.payload))
             else
