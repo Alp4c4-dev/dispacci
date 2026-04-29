@@ -5,7 +5,7 @@ class UserMailer < ApplicationMailer
     @user = user
     @url = verify_email_url(token: token)
 
-    mail(to: @user.email, subject: "Grazie per esserti unitə al Fronte #{@user.username}")
+    mail(to: @user.email, subject: "Grazie per esserti unitə al Fronte, #{@user.username}")
   end
 
   def password_reset_email(user, token)

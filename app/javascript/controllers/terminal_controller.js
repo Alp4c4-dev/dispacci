@@ -122,6 +122,15 @@ export default class extends Controller {
     // UX
     this.loginUsernameTarget.focus()
 
+    // Controlla se arriviamo dalla pagina privacy
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get("view") === "register") {
+      this.showRegistrationScreen()
+
+      // Pulisce l'URL cancellando "?view=register" per non lasciarlo visibile in alto
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     // Sessione al refresh
     this.resumeSessionIfAny()
 
@@ -321,13 +330,25 @@ export default class extends Controller {
     // Pulisce eventuali errori precedenti
     this.regErrorTarget.innerText = "";
 
+    // Estrae i valori inseriti dall'utente
+    const username = this.regUsernameTarget.value.trim();
+    const email = this.regEmailTarget.value.trim();
+    const password = this.regPasswordTarget.value;
+    const passwordConfirm = this.regPasswordConfirmTarget.value;
+
+    // Verifica che i campi di testo non siano vuoti
+    if (!username || !email || !password) {
+      this.regErrorTarget.innerText = "Compila tutti i campi obbligatori per registrarti.";
+      return; // Blocca l'esecuzione qui, non invia nulla al server
+    }
+
     // Controlli rapidi lato client (UX)
     if (!this.regPrivacyTarget.checked) {
       this.regErrorTarget.innerText = "Devi accettare l'informativa per procedere.";
       return;
     }
 
-    if (this.regPasswordTarget.value !== this.regPasswordConfirmTarget.value) {
+    if (password !== passwordConfirm) {
       this.regErrorTarget.innerText = "Le password non coincidono.";
       return;
     }
@@ -335,10 +356,10 @@ export default class extends Controller {
     // Raccoglie i dati
     const payload = {
       user: {
-        username: this.regUsernameTarget.value.trim(),
-        email: this.regEmailTarget.value.trim(),
-        password: this.regPasswordTarget.value,
-        password_confirmation: this.regPasswordConfirmTarget.value,
+        username: username,
+        email: email,
+        password: password,
+        password_confirmation: passwordConfirm,
         accetta_informativa: this.regPrivacyTarget.checked,
         consenso_promozionale: this.regPromoTarget.checked
       }
