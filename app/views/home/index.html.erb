@@ -28,15 +28,14 @@
 
   <div id="code-screen" class="full-screen" data-terminal-target="codeScreen" style="display:none;">
     <div class="box">
-      <h1>Codice di Sicurezza</h1>
-      <label>
-        Inserire parola d'ordine
+      <h1>Parola d'ordine</h1>
+
         <input type="text"
                style="text-transform: uppercase;"
                data-terminal-target="codeInput"
                data-action="keydown.enter->terminal#verifyCode" />
-      </label>
-      <button type="button" data-action="click->terminal#verifyCode">Verifica Codice</button>
+
+      <button type="button" data-action="click->terminal#verifyCode">Verifica</button>
       <button type="button" class="link" data-action="click->terminal#backToLogin">Indietro</button>
       <div class="error" data-terminal-target="codeError"></div>
     </div>
