@@ -44,8 +44,8 @@ class KpisController < ApplicationController
             <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=breakout">5. Scarica Tabella Partite Breakout</a></li>
             <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=definitions">6. Scarica Tabella Definizioni Solitudine</a></li>
             <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=unlocks">7. Scarica Tabella Contenuti Sbloccati</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=puzzle_coordinate" style="background: #28a745;">8. Scarica Tabella Puzzle Coordinate</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=puzzle_mappa" style="background: #28a745;">9. Scarica Tabella Puzzle Mappa</a></li>
+            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=puzzle_coordinate">8. Scarica Tabella Puzzle Coordinate</a></li>
+            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=puzzle_mappa">9. Scarica Tabella Puzzle Mappa</a></li>
           </ul>
         </div>
       </body>
@@ -107,14 +107,16 @@ class KpisController < ApplicationController
         csv << [ "ID", "Username", "Data (Senza Orario)", "Input Inserito", "Esito (Corretto?)" ]
         # Filtriamo solo i tentativi etichettati come "puzzle_coordinate"
         CommandAttempt.includes(:user).where(keyword_id: "puzzle_coordinate").find_each do |a|
-          csv << [ a.id, a.user&.username, a.created_at.strftime("%d/%m/%Y"), a.keyword_input, a.is_correct ? "SI" : "NO" ]
+          data_formattata = a.created_at&.strftime("%d/%m/%Y") || "N/D"
+          csv << [ a.id, a.user&.username, data_formattata, a.keyword_input, a.is_correct ? "SI" : "NO" ]
         end
 
       when "puzzle_mappa"
         csv << [ "ID", "Username", "Data (Senza Orario)", "Input Inserito", "Esito (Corretto?)" ]
         # Filtriamo solo i tentativi etichettati come "mappa_esterna"
         CommandAttempt.includes(:user).where(keyword_id: "mappa_esterna").find_each do |a|
-          csv << [ a.id, a.user&.username, a.created_at.strftime("%d/%m/%Y"), a.keyword_input, a.is_correct ? "SI" : "NO" ]
+          data_formattata = a.created_at&.strftime("%d/%m/%Y") || "N/D"
+          csv << [ a.id, a.user&.username, data_formattata, a.keyword_input, a.is_correct ? "SI" : "NO" ]
         end
 
       else
