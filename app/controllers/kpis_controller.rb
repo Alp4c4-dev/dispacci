@@ -67,16 +67,19 @@ class KpisController < ApplicationController
         end
 
       when "sessions"
-        csv << [ "ID Sessione", "ID Utente", "Username", "Durata (secondi)" ]
+        csv << [ "ID Sessione", "ID Utente", "Username", "Durata (secondi)", "Data Inizio" ]
         UserSession.includes(:user).find_each do |s|
-          csv << [ s.id, s.user_id, s.user&.username, s.duration_seconds ]
+          data_inizio = s.created_at&.strftime("%d/%m/%Y") || "N/D"
+          csv << [ s.id, s.user_id, s.user&.username, s.duration_seconds, data_inizio ]
         end
 
       when "attempts"
-        csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Parola Inserita", "Esito (Corretto?)" ]
+        csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Parola Inserita", "Esito (Corretto?)", "Data di sblocco" ]
+
         # Escludiamo i due puzzle dalla lista generale
         CommandAttempt.includes(:user).where.not(keyword_id: [ "puzzle_coordinate", "mappa_esterna" ]).find_each do |a|
-          csv << [ a.id, a.user_id, a.user&.username, a.user_session_id, a.keyword_input, a.is_correct ? "SI" : "NO" ]
+          data_tentativo = a.created_at&.strftime("%d/%m/%Y") || "N/D"
+          csv << [ a.id, a.user_id, a.user&.username, a.user_session_id, a.keyword_input, a.is_correct ? "SI" : "NO", data_tentativo ]
         end
 
       when "donations"
