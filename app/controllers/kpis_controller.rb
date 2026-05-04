@@ -61,9 +61,9 @@ class KpisController < ApplicationController
     CSV.generate(headers: true) do |csv|
       case table
       when "users"
-        csv << [ "ID", "Username", "Primo Accesso", "Totale Sessioni" ]
+        csv << [ "ID", "Username", "Email", "Consenso Promozionale", "Primo Accesso", "Totale Sessioni" ]
         User.find_each do |u|
-          csv << [ u.id, u.username, u.first_seen_at, u.total_sessions_count ]
+          csv << [ u.id, u.username, u.email, u.consenso_promozionale, u.first_seen_at, u.total_sessions_count ]
         end
 
       when "sessions"
