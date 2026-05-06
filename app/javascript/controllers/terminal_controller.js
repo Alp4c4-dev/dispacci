@@ -777,6 +777,7 @@ export default class extends Controller {
       a.href = item.url
       a.textContent = item.text || item.url
       a.rel = "noopener"
+      a.target = "_blank"
 
       lineLink.appendChild(a)
       this.screenTarget.appendChild(lineLink)
@@ -1343,6 +1344,11 @@ export default class extends Controller {
       } else {
         this.screenTarget.scrollTop = this.screenTarget.scrollHeight;
       }
+
+    } else if (!ok && data && data.error === "Non autenticato") {
+      this.printLine("Sessione scaduta. Torno al login.");
+      this.resetToLogin();
+
     } else {
       this.printLine("Errore di connessione.", "error-text");
     }
