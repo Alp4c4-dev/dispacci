@@ -90,7 +90,9 @@ Rails.application.configure do
 
   # --- INIZIO PARAMETRI SMTP PER RESEND IN PRODUZIONE ---
   config.action_mailer.delivery_method = :smtp
-  config.action_mailer.perform_deliveries = true
+
+  # Invia l'email SOLO SE la variabile non è impostata su "true"
+  config.action_mailer.perform_deliveries = ENV["DISABLE_REAL_EMAILS"] != "true"
   config.action_mailer.raise_delivery_errors = true
 
   config.action_mailer.smtp_settings = {
