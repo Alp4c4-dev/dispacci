@@ -70,7 +70,23 @@ class KpisController < ApplicationController
         csv << [ "ID Sessione", "ID Utente", "Username", "Durata (secondi)", "Data Inizio" ]
         UserSession.includes(:user).find_each do |s|
           data_inizio = s.created_at&.strftime("%d/%m/%Y") || "N/D"
-          csv << [ s.id, s.user_id, s.user&.username, s.duration_seconds, data_inizio ]
+
+          durata = s.duration_seconds
+
+          # Se la durata è nil, proviamo a dedurla dall'ultimo comando
+          if durata.nil?
+            ultimo_comando = CommandAttempt.where(user_session_id: s.id).order(created_at: :desc).first
+
+            if ultimo_comando
+              # Sottrae la data dell'ultimo comando dalla data di inizio sessione
+              durata = (ultimo_comando.created_at - s.created_at).to_i
+            else
+              # Se non ha mai digitato nemmeno un comando ed è scappato subito
+              durata = 0
+            end
+          end
+
+          csv << [ s.id, s.user_id, s.user&.username, durata, data_inizio ]
         end
 
       when "attempts"
