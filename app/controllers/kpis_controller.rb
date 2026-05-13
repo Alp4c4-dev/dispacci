@@ -1,14 +1,16 @@
 require "csv"
 
 class KpisController < ApplicationController
-  # Definisci qui la tua password per il link segreto
-  SECRET_TOKEN = "f0rz4.R0m4"
+  # Protezione via HTTP Basic Auth. Le credenziali sono lette da ENV.
+  # Se le ENV non sono configurate, blocchiamo tutto con un errore chiaro
+  # invece di lasciare passare con password vuota.
+  before_action :ensure_kpi_credentials_configured
+  http_basic_authenticate_with(
+    name: ENV["KPI_USERNAME"].to_s,
+    password: ENV["KPI_PASSWORD"].to_s
+  )
 
   def index
-    if params[:token] != SECRET_TOKEN
-      return render plain: "Accesso negato.", status: :unauthorized
-    end
-
     # Se la richiesta contiene il parametro per scaricare il CSV
     if params[:format] == "csv" && params[:table].present?
       send_data generate_csv(params[:table]),
@@ -37,15 +39,15 @@ class KpisController < ApplicationController
         <div class="container">
           <h1>Download Tabelle KPI</h1>
           <ul>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=users">1. Scarica Tabella Utenti (Attività e Login)</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=sessions">2. Scarica Tabella Sessioni (Durata Accessi)</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=attempts">3. Scarica Tabella Tentativi Comandi</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=donations">4. Scarica Tabella Donazioni (Timer)</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=breakout">5. Scarica Tabella Partite Breakout</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=definitions">6. Scarica Tabella Definizioni Solitudine</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=unlocks">7. Scarica Tabella Contenuti Sbloccati</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=puzzle_coordinate">8. Scarica Tabella Puzzle Coordinate</a></li>
-            <li><a href="/kpi?token=#{SECRET_TOKEN}&format=csv&table=puzzle_mappa">9. Scarica Tabella Puzzle Mappa</a></li>
+            <li><a href="/kpi?format=csv&table=users">1. Scarica Tabella Utenti (Attività e Login)</a></li>
+            <li><a href="/kpi?format=csv&table=sessions">2. Scarica Tabella Sessioni (Durata Accessi)</a></li>
+            <li><a href="/kpi?format=csv&table=attempts">3. Scarica Tabella Tentativi Comandi</a></li>
+            <li><a href="/kpi?format=csv&table=donations">4. Scarica Tabella Donazioni (Timer)</a></li>
+            <li><a href="/kpi?format=csv&table=breakout">5. Scarica Tabella Partite Breakout</a></li>
+            <li><a href="/kpi?format=csv&table=definitions">6. Scarica Tabella Definizioni Solitudine</a></li>
+            <li><a href="/kpi?format=csv&table=unlocks">7. Scarica Tabella Contenuti Sbloccati</a></li>
+            <li><a href="/kpi?format=csv&table=puzzle_coordinate">8. Scarica Tabella Puzzle Coordinate</a></li>
+            <li><a href="/kpi?format=csv&table=puzzle_mappa">9. Scarica Tabella Puzzle Mappa</a></li>
           </ul>
         </div>
       </body>
@@ -56,6 +58,12 @@ class KpisController < ApplicationController
   end
 
   private
+
+  def ensure_kpi_credentials_configured
+    if ENV["KPI_USERNAME"].blank? || ENV["KPI_PASSWORD"].blank?
+      render plain: "KPI access not configured on this environment.", status: :service_unavailable
+    end
+  end
 
   def generate_csv(table)
     CSV.generate(headers: true) do |csv|
