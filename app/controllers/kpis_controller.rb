@@ -104,8 +104,11 @@ class KpisController < ApplicationController
       when "attempts"
         csv << [ "ID", "ID Utente", "Username", "ID Sessione", "Parola Inserita", "Esito (Corretto?)", "Data di sblocco" ]
 
-        # Escludiamo i due puzzle dalla lista generale
-        CommandAttempt.includes(:user).where.not(keyword_id: [ "puzzle_coordinate", "mappa_esterna" ]).find_each do |a|
+        # Escludiamo i due puzzle dalla lista generale.
+        # Includiamo invece i record con keyword_id nullo (comandi non riconosciuti):
+        # in SQL il confronto `NOT IN (...)` esclude i NULL silenziosamente,
+        # quindi dobbiamo aggiungerli esplicitamente con OR.
+        CommandAttempt.includes(:user).where("keyword_id IS NULL OR keyword_id NOT IN (?)", [ "puzzle_coordinate", "mappa_esterna" ]).find_each do |a|
           data_tentativo = a.created_at&.strftime("%d/%m/%Y") || "N/D"
           csv << [ a.id, a.user_id, a.user&.username, a.user_session_id, a.keyword_input, a.is_correct ? "SI" : "NO", data_tentativo ]
         end
