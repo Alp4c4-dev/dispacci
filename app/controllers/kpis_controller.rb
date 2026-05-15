@@ -83,13 +83,17 @@ class KpisController < ApplicationController
 
           # Se la durata è nil, proviamo a dedurla dall'ultimo comando
           if durata.nil?
-            ultimo_comando = CommandAttempt.where(user_session_id: s.id).order(created_at: :desc).first
+            ultimo_comando = CommandAttempt
+              .where(user_session_id: s.id)
+              .where.not(created_at: nil)
+              .order(created_at: :desc)
+              .first
 
-            if ultimo_comando
+            if ultimo_comando && s.created_at
               # Sottrae la data dell'ultimo comando dalla data di inizio sessione
               durata = (ultimo_comando.created_at - s.created_at).to_i
             else
-              # Se non ha mai digitato nemmeno un comando ed è scappato subito
+              # Se non ha mai digitato nemmeno un comando (o se mancano i timestamp), 0
               durata = 0
             end
           end
