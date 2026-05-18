@@ -62,27 +62,9 @@ export default class extends Controller {
       }
     }
 
-    // Listener per chiusura scheda/browser (Beacon API)
-    this.onPageHide = () => {
-      // solo se c'è un utente effettivamente loggato
-      if (this.currentUser) {
-        const formData = new FormData()
-
-        // Inganna Rails facendogli credere che sia una richiesta DELETE
-        formData.append("_method", "delete")
-
-        // Passa il token CSRF nel corpo della richiesta invece che nell'header
-        formData.append("authenticity_token", this.csrfToken())
-
-        // Invia la richiesta in background senza bloccare la chiusura della pagina
-        navigator.sendBeacon("/logout", formData)
-      }
-    }
-
     // Aggiunta listener per registrazione eventi
     //window.addEventListener("blur", this.onWindowBlur)
     document.addEventListener("visibilitychange", this.onVisibilityChange)
-    window.addEventListener("pagehide", this.onPageHide)
 
     // stati per la pausa
     this.isWaitingForInput = false
@@ -147,7 +129,6 @@ export default class extends Controller {
     this.screenTarget.removeEventListener("click", this.onScreenTap)
     //document.removeEventListener("blur", this.onWindowBlur)
     window.removeEventListener("visibilitychange", this.onVisibilityChange)
-    window.removeEventListener("pagehide", this.onPageHide)
   }
 
   // --- WAKE LOCK API (Impedisce allo schermo di spegnersi) ---
@@ -776,8 +757,6 @@ export default class extends Controller {
       const a = document.createElement("a")
       a.href = item.url
       a.textContent = item.text || item.url
-      a.rel = "noopener"
-      a.target = "_blank"
 
       lineLink.appendChild(a)
       this.screenTarget.appendChild(lineLink)
