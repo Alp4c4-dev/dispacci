@@ -13,7 +13,9 @@ namespace :db do
   desc "Chiude le UserSession abbandonate da più di 30 minuti, calcolando la durata"
   task close_abandoned_sessions: :environment do
     threshold = 30.minutes.ago
+    max_plausible_duration = 4.hours.to_i # 14400 secondi: oltre questo è anomalia
     closed_count = 0
+    skipped_count = 0
 
     # Sessioni ancora "aperte" (duration_seconds nil) iniziate più di 30 min fa
     UserSession.where(duration_seconds: nil)
@@ -33,12 +35,23 @@ namespace :db do
       next if end_time > threshold
 
       duration = (end_time - session.created_at).to_i
-      duration = 0 if duration < 0 # paranoia: mai durate negative
+
+      # Se la durata è anomala (negativa o oltre il massimo plausibile),
+      # NON salviamo un valore inventato. Lasciamo la sessione aperta e logghiamo,
+      # così l'anomalia resta visibile invece di falsare i KPI.
+      if duration < 0 || duration > max_plausible_duration
+        Rails.logger.warn(
+          "[close_abandoned_sessions] Durata anomala per UserSession ##{session.id}: " \
+          "#{duration}s (created_at=#{session.created_at}, ultima_attivita=#{end_time}). Sessione saltata."
+        )
+        skipped_count += 1
+        next
+      end
 
       session.update_columns(duration_seconds: duration)
       closed_count += 1
     end
 
-    puts "Operazione completata: chiuse #{closed_count} sessioni abbandonate."
+    puts "Operazione completata: chiuse #{closed_count} sessioni. Saltate #{skipped_count} per durata anomala (vedi log)."
   end
 end
