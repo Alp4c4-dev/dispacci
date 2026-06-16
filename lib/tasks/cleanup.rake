@@ -9,4 +9,36 @@ namespace :db do
 
     puts "Operazione completata: rimossi #{deleted_count} tentativi obsoleti (antecedenti al #{threshold.strftime('%d/%m/%Y')})."
   end
+
+  desc "Chiude le UserSession abbandonate da più di 30 minuti, calcolando la durata"
+  task close_abandoned_sessions: :environment do
+    threshold = 30.minutes.ago
+    closed_count = 0
+
+    # Sessioni ancora "aperte" (duration_seconds nil) iniziate più di 30 min fa
+    UserSession.where(duration_seconds: nil)
+               .where("created_at < ?", threshold)
+               .find_each do |session|
+      # Ultimo segno di vita = ultimo CommandAttempt della sessione
+      last_attempt = session.command_attempts
+                            .where.not(created_at: nil)
+                            .order(created_at: :desc)
+                            .first
+
+      # Se non ha mai digitato nulla, l'ultimo segno di vita è l'inizio stesso (durata 0)
+      end_time = last_attempt ? last_attempt.created_at : session.created_at
+
+      # Se l'ultima attività è più recente della soglia, la sessione potrebbe
+      # essere ancora attiva: la saltiamo, verrà chiusa in un giro futuro
+      next if end_time > threshold
+
+      duration = (end_time - session.created_at).to_i
+      duration = 0 if duration < 0 # paranoia: mai durate negative
+
+      session.update_columns(duration_seconds: duration)
+      closed_count += 1
+    end
+
+    puts "Operazione completata: chiuse #{closed_count} sessioni abbandonate."
+  end
 end
