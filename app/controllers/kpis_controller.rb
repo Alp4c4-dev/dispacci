@@ -79,24 +79,10 @@ class KpisController < ApplicationController
         UserSession.includes(:user).find_each do |s|
           data_inizio = s.created_at&.strftime("%d/%m/%Y") || "N/D"
 
-          durata = s.duration_seconds
-
-          # Se la durata è nil, proviamo a dedurla dall'ultimo comando
-          if durata.nil?
-            ultimo_comando = CommandAttempt
-              .where(user_session_id: s.id)
-              .where.not(created_at: nil)
-              .order(created_at: :desc)
-              .first
-
-            if ultimo_comando && s.created_at
-              # Sottrae la data dell'ultimo comando dalla data di inizio sessione
-              durata = (ultimo_comando.created_at - s.created_at).to_i
-            else
-              # Se non ha mai digitato nemmeno un comando (o se mancano i timestamp), 0
-              durata = 0
-            end
-          end
+          # La durata è calcolata dal task db:close_abandoned_sessions.
+          # Se è nil, significa che la sessione non è ancora stata chiusa oppure aveva
+          # una durata anomala scartata dal task: mostriamo "N/D" invece di ricalcolare.
+          durata = s.duration_seconds || "N/D"
 
           csv << [ s.id, s.user_id, s.user&.username, durata, data_inizio ]
         end
