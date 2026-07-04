@@ -410,12 +410,20 @@ class CommandsController < ApplicationController
 
       duration = 0 if duration < 0
 
-      Donation.create!(
-        user: current_user,
-        user_session_id: session[:user_session_id],
-        completed: true,
-        seconds: duration
-      )
+      if duration > 0
+        Donation.create!(
+          user: current_user,
+          user_session_id: session[:user_session_id],
+          completed: true,
+          seconds: duration
+        )
+      else
+        Rails.logger.info(
+          "[stop_timer] Donazione scartata: durata #{duration}s " \
+          "(user_id=#{current_user.id}, user_session_id=#{session[:user_session_id]})"
+        )
+      end
+
       session.delete(:timer_started_at)
 
       total_donated = current_user.donations.where(completed: true).sum(:seconds)
