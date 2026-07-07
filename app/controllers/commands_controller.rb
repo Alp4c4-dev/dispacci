@@ -28,7 +28,7 @@ class CommandsController < ApplicationController
       unlockable = Unlockable.where("LOWER(key) = ?", cmd_norm).first
 
       # Determina se il comando ha avuto successo
-      is_correct = is_category || unlockable.present? || handle_utility_command(cmd).present?
+      is_correct = is_category || unlockable.present? || @utility_handled
 
       CommandAttempt.create!(
         user: current_user,
@@ -64,6 +64,10 @@ class CommandsController < ApplicationController
 
     # 1) Utility commands
     utility_result = handle_utility_command(cmd)
+
+    # Memorizza se il comando è utility
+    # Supporto per il calcolo dei KPI
+    @utility_handled = utility_result.present?
 
     if utility_result
       return utility_result if utility_result.is_a?(Hash)
