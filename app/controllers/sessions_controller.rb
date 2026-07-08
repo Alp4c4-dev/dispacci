@@ -85,11 +85,8 @@ class SessionsController < ApplicationController
     if session[:user_session_id]
       user_session = UserSession.find_by(id: session[:user_session_id])
       if user_session
-        if session[:session_started_at]
-          duration = (Time.current - session[:session_started_at].to_time).to_i
-        else
-          duration = 0
-        end
+        # Durata calcolata "per blocchi"
+        duration = user_session.active_duration_seconds
         user_session.update!(duration_seconds: duration)
       end
     end

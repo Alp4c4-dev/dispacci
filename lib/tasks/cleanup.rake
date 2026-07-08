@@ -13,36 +13,29 @@ namespace :db do
   desc "Chiude le UserSession abbandonate da più di 30 minuti, calcolando la durata"
   task close_abandoned_sessions: :environment do
     threshold = 30.minutes.ago
-    max_plausible_duration = 4.hours.to_i # 14400 secondi: oltre questo è anomalia
     closed_count = 0
     skipped_count = 0
 
     # Sessioni ancora "aperte" (duration_seconds nil) iniziate più di 30 min fa
-    UserSession.where(duration_seconds: nil)
-               .where("created_at < ?", threshold)
-               .find_each do |session|
+    UserSession.where(duration_seconds: nil).where("created_at < ?", threshold).find_each do |session|
       # Ultimo segno di vita = ultimo CommandAttempt della sessione
-      last_attempt = session.command_attempts
-                            .where.not(created_at: nil)
-                            .order(created_at: :desc)
-                            .first
+      last_attempt = session.command_attempts.where.not(created_at: nil).order(created_at: :desc).first
 
       # Se non ha mai digitato nulla, l'ultimo segno di vita è l'inizio stesso (durata 0)
       end_time = last_attempt ? last_attempt.created_at : session.created_at
 
-      # Se l'ultima attività è più recente della soglia, la sessione potrebbe
-      # essere ancora attiva: la saltiamo, verrà chiusa in un giro futuro
+      # La sessione potrebbe essere ancora attiva, quindi viene saltata
       next if end_time > threshold
 
-      duration = (end_time - session.created_at).to_i
+      # Durata calcolata "per blocchi"
+      duration = session.active_duration_seconds
 
-      # Se la durata è anomala (negativa o oltre il massimo plausibile),
-      # NON salviamo un valore inventato. Lasciamo la sessione aperta e logghiamo,
-      # così l'anomalia resta visibile invece di falsare i KPI.
-      if duration < 0 || duration > max_plausible_duration
+      # Rete di sicurezza contro durate negative e timestamp corrotti
+      # Scarto queste durate e loggo
+      if duration < 0
         Rails.logger.warn(
-          "[close_abandoned_sessions] Durata anomala per UserSession ##{session.id}: " \
-          "#{duration}s (created_at=#{session.created_at}, ultima_attivita=#{end_time}). Sessione saltata."
+          "[close_abandoned_sessions] Durata negativa anomala per UserSession ##{session.id}: " \
+          "#{duration}s. Sessione saltata."
         )
         skipped_count += 1
         next
