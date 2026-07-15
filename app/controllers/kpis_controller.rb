@@ -1,6 +1,9 @@
 require "csv"
 
 class KpisController < ApplicationController
+  # Per evitare che l'accesso ai kpi generi UserSession
+  skip_before_action :ensure_user_session
+
   # Protezione via HTTP Basic Auth. Le credenziali sono lette da ENV.
   # Se le ENV non sono configurate, blocchiamo tutto con un errore chiaro
   # invece di lasciare passare con password vuota.
