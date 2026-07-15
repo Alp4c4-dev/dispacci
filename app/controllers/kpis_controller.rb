@@ -41,6 +41,12 @@ class KpisController < ApplicationController
       <body>
         <div class="container">
           <h1>Download Tabelle KPI</h1>
+          <p style="font-size: 13px; color: #666; border-left: 3px solid #ddd; padding-left: 12px;">
+            <strong>Nota sui conteggi:</strong> la colonna "Accessi (login)" nella tabella Utenti conta i login
+            espliciti. La tabella Sessioni conta invece le <em>visite</em>: una nuova visita nasce anche quando
+            un utente torna sul portale senza rifare il login (il cookie di accesso dura a lungo, quello di
+            sessione muore alla chiusura del browser). I due numeri non coincidono, ed è corretto così.
+          </p>
           <ul>
             <li><a href="/kpi?format=csv&table=users">1. Scarica Tabella Utenti (Attività e Login)</a></li>
             <li><a href="/kpi?format=csv&table=sessions">2. Scarica Tabella Sessioni (Durata Accessi)</a></li>
@@ -72,7 +78,9 @@ class KpisController < ApplicationController
     CSV.generate(headers: true) do |csv|
       case table
       when "users"
-        csv << [ "ID", "Username", "Email", "Consenso Promozionale", "Primo Accesso", "Totale Sessioni" ]
+        # "Accessi (login)" conta i login espliciti (incrementato in SessionsController#create).
+        # NON coincide col numero di righe nella tabella Sessioni, che conta le visite: una visita nasce anche al rientro senza login (vedi ensure_user_session).
+        csv << [ "ID", "Username", "Email", "Consenso Promozionale", "Primo Accesso", "Accessi (login)" ]
         User.find_each do |u|
           csv << [ u.id, u.username, u.email, u.consenso_promozionale, u.first_seen_at, u.total_sessions_count ]
         end
