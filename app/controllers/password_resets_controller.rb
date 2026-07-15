@@ -4,12 +4,12 @@ class PasswordResetsController < ApplicationController
 
     if user.present?
       token = user.generate_token_for(:password_reset)
-      UserMailer.password_reset_email(user, token).deliver_now
+      UserMailer.password_reset_email(user, token).deliver_later
     end
 
     render json: {
       ok: true,
-      message: "Se l'email è registrata nel nostro sistema, riceverai un link di ripristino a breve."
+      message: "Se l'email è registrata nel nostro sistema, riceverai un link di ripristino a breve. Se non ti arriva (per mille motivi), riprova."
     }
   end
 

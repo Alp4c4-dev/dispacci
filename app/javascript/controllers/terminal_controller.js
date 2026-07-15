@@ -403,7 +403,7 @@ export default class extends Controller {
 
     if (ok && data.ok) {
       this.forgotMessageTarget.innerText = data.message || "Se l'email è registrata, riceverai un link a breve.";
-      this.forgotMessageTarget.style.color = "#0aff0a"; // Verde hacker
+      this.forgotMessageTarget.style.color = "#0aff0a";
       this.forgotEmailTarget.value = "";
     } else {
       this.forgotMessageTarget.innerText = data?.error || "Si è verificato un errore.";
