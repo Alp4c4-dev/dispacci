@@ -1,0 +1,5 @@
+Tutte le coordinate della mappa sono state stampate. Le trovi nel Volume 0.
+[[NEXT]]
+Lo dice anche Blocky: se hai la X e la Y ma non il testo, quello che cerchi sono le VIE.
+[[NEXT]]
+XY sono sempre vicine, e anche la via non si trova lontano. Scrivila per esteso: es. "Via della Pazienza come Rivoluzione"

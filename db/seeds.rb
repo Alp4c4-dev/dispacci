@@ -89,6 +89,16 @@ system_rows = [
   { key: "join", kind: "text", payload: payload_for.call("system/join.txt") }
 ]
 
+# ----------------
+# Indizi (comando "indizio")
+# Un file per gradino della scala, con lo stesso nome del gradino in
+# HintEngine::STEPS. I livelli dentro ogni file sono separati da [[NEXT]]:
+# aggiungerne o toglierne uno si fa nel file, senza toccare il codice.
+# ----------------
+system_rows += HintEngine::STEPS.map do |step|
+  { key: "hint_#{step.key}", kind: "text", payload: payload_for.call("hints/#{step.key}.txt") }
+end
+
 # Inserisce o aggiorna i record nel database usando la chiave come riferimento univoco
 SystemPayload.upsert_all(system_rows, unique_by: :key)
 

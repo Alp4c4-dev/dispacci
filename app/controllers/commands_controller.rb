@@ -369,6 +369,14 @@ class CommandsController < ApplicationController
       {
         items: raw_lines.map { |line| { type: "text", text: line, style: "payload" } }
       }
+    when "indizio"
+      result = HintEngine.new(current_user).call
+
+      if result[:levels].nil?
+        { items: missing_payload_error(result[:payload_key]) }
+      else
+        { items: result[:levels].map { |text| { type: "text", text: text, style: "payload" } } }
+      end
     when "whoami"
       [ "Sei autenticatə come #{current_user.username}." ]
     when "ping"

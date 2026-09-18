@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_27_084507) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_09_105536) do
   create_table "command_attempts", force: :cascade do |t|
     t.datetime "created_at"
     t.boolean "is_correct", default: false
@@ -45,6 +45,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_084507) do
     t.index ["user_id", "game_key"], name: "index_game_sessions_on_user_id_and_game_key"
     t.index ["user_id"], name: "index_game_sessions_on_user_id"
     t.index ["user_session_id"], name: "index_game_sessions_on_user_session_id"
+  end
+
+  create_table "hint_progresses", force: :cascade do |t|
+    t.integer "levels_shown", default: 0, null: false
+    t.string "step_key", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "step_key"], name: "index_hint_progresses_on_user_id_and_step_key", unique: true
+    t.index ["user_id"], name: "index_hint_progresses_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -124,6 +132,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_084507) do
   add_foreign_key "donations", "users"
   add_foreign_key "game_sessions", "user_sessions"
   add_foreign_key "game_sessions", "users"
+  add_foreign_key "hint_progresses", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "user_sessions", "users"
   add_foreign_key "user_unlocks", "unlockables"

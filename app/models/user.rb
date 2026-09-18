@@ -12,6 +12,7 @@ class User < ApplicationRecord
   has_many :word_definitions, dependent: :destroy
   has_many :game_sessions, dependent: :destroy
   has_many :command_attempts, dependent: :destroy
+  has_many :hint_progresses, dependent: :destroy
 
   # Validazioni di base
   validates :username, presence: true, uniqueness: true
@@ -64,6 +65,48 @@ class User < ApplicationRecord
     has_coord = command_attempts.where(keyword_id: "puzzle_coordinate", is_correct: true).where("LOWER(keyword_input) LIKE ?", "%ginestre%").exists?
     has_time = command_attempts.where(keyword_id: "puzzle_coordinate", is_correct: true, keyword_input: "23:59").exists?
     has_coord && has_time
+  end
+
+  # --- Stato di avanzamento (usato da HintEngine) ---
+  #
+  # Le due query qui sotto vivono anche dentro coordinate_puzzle_completed?
+  # qui sopra: la ripetizione e' voluta, per lasciare quel metodo intatto.
+
+  # Il luogo della missione principale: "C3 - Via delle Ginestre".
+  def coordinate_place_solved?
+    command_attempts
+      .where(keyword_id: "puzzle_coordinate", is_correct: true)
+      .where("LOWER(keyword_input) LIKE ?", "%ginestre%")
+      .exists?
+  end
+
+  # L'orario della missione principale.
+  def coordinate_time_solved?
+    command_attempts
+      .where(keyword_id: "puzzle_coordinate", is_correct: true, keyword_input: "23:59")
+      .exists?
+  end
+
+  # Ha almeno aperto la missione principale digitando "coordinate",
+  # anche se ha chiuso subito il modulo senza rispondere.
+  def opened_coordinate_mission?
+    command_attempts.where("LOWER(keyword_input) = ?", "coordinate").exists?
+  end
+
+  # Sblocchi che il giocatore vede nel contatore x/23: la mappa segreta
+  # e' esclusa perche' non e' conteggiata nel totale.
+  def visible_unlocks_count
+    user_unlocks.joins(:unlockable).where.not(unlockables: { category: "Mappa_Segreta" }).count
+  end
+
+  # Coordinate della mappa trovate. La quarta (Mappa_Segreta) non conta:
+  # si ottiene di conseguenza, non si cerca.
+  def map_coordinates_count
+    user_unlocks.joins(:unlockable).where(unlockables: { category: "Mappa" }).count
+  end
+
+  def unlocked_key?(key)
+    user_unlocks.joins(:unlockable).where("LOWER(unlockables.key) = ?", key.to_s.downcase).exists?
   end
 
   # Metodo di classe (self.) per contare tutte le persone che hanno risolto il puzzle
