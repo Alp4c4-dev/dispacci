@@ -1,4 +1,4 @@
-Ecco il codice condiviso da Alfiere. Se questa è una richiesta di aiuto, rispondiamo.
+Ecco il codice condiviso da Alfiere. Dobbiamo guardarci dentro.
 
 [[NEXT]]
 
@@ -9,6 +9,7 @@ Ecco il codice condiviso da Alfiere. Se questa è una richiesta di aiuto, rispon
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Atelier delle Miniature — Eshop</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');
 :root{
 --bg:#0f1720;
 --card:#0b1220;
@@ -27,10 +28,26 @@ color:#e6eef6;
 padding:28px;
 line-height:1.4;
 }
-header{display:flex;gap:16px;align-items:center;margin-bottom:22px;}
-.logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#071021;font-size:18px;}
-h1{font-size:18px;margin:0}
-p.lead{color:var(--muted);margin:0;font-size:13px}
+header{margin-bottom:22px;text-align:left;}
+h1{font-family:'UnifrakturMaguntia','Old English Text MT','Luminari',serif;font-size:36px;font-weight:400;margin:0;letter-spacing:0.5px;}
+
+/* il messaggio: non fa parte del negozio */
+.msg{
+margin:0 0 26px;
+padding:18px 20px;
+background:#000;
+color:#f2f2f2;
+border-top:2px solid #f2f2f2;
+border-bottom:2px solid #f2f2f2;
+font-family:"Courier New", Courier, monospace;
+font-size:14px;
+line-height:1.75;
+}
+.msg p{margin:0}
+.msg .sign{margin-top:6px;}
+.msg .cursor{display:inline-block;width:0.6em;height:1em;background:#f2f2f2;vertical-align:-2px;margin-left:4px;animation:blink 1s steps(1) infinite;}
+@keyframes blink{50%{opacity:0}}
+
 .toolbar{margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;}
 .search{display:flex;gap:8px;background:var(--glass);padding:10px 14px;border-radius:999px;min-width:260px;}
 .search input{background:transparent;border:none;color:inherit;outline:none;font-size:14px;}
@@ -47,17 +64,22 @@ p.lead{color:var(--muted);margin:0;font-size:13px}
 .buy{margin-top:auto;display:flex;gap:8px;}
 button{border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,var(--accent),#d97706);color:#071021;font-weight:700;cursor:pointer;}
 .ghost{background:transparent;border:1px solid rgba(255,255,255,0.07);color:var(--muted);}
+.promo{margin-top:28px;padding:22px 24px;border-radius:12px;background:linear-gradient(135deg,rgba(245,158,11,0.16),rgba(6,182,212,0.12));border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.promo .ptitle{font-size:18px;font-weight:700;margin:0;}
+.promo .psub{font-size:13px;color:var(--muted);margin:4px 0 0;}
+.promo .pbtn{padding:10px 14px;border-radius:10px;background:linear-gradient(180deg,var(--accent),#d97706);color:#071021;font-weight:700;font-size:14px;cursor:default;white-space:nowrap;}
 </style>
 </head>
 <body>
 
 <header>
-<div class="logo">MD</div>
-<div>
-<h1>Atelier delle Miniature — Emporio</h1>
-<p class="lead">Figure da dipingere e collezionare — edizioni artigianali</p>
-</div>
+<h1>Atelier delle Miniature</h1>
 </header>
+
+<section class="msg">
+<p>Dite a tutti che sto bene. Ho solo seguito i dati. Ho parlato con la strega bianca. L'hanno uccisa, non ho le prove. Ho fatto il mio gioco. Lo sblocchi scegliendo l'eroe giusto. Ci serviranno i giochi di tutti, ma non ora.</p>
+<p class="sign">Lele<span class="cursor"></span></p>
+</section>
 
 <div class="toolbar">
 <div class="search"><input id="q" placeholder="Cerca miniature..."></div>
@@ -89,8 +111,8 @@ button{border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(
 <span class="badge">Cavalieri</span>
 <svg viewBox="0 0 100 75">
 <rect width="100" height="75" fill="#151922"/>
-<rect x="40" y="30" width="20" height="30" fill="#c7cbd4"/>
-<circle cx="50" cy="22" r="10" fill="#dfe4eb"/>
+<rect x="38" y="14" width="24" height="48" fill="#80858e"/>
+<rect x="42" y="18" width="16" height="10" fill="#9a9fa7"/>
 </svg>
 </div>
 <div class="title">Cavaliere d'Argento</div>
@@ -107,8 +129,8 @@ button{border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(
 <span class="badge">Protettori</span>
 <svg viewBox="0 0 100 75">
 <rect width="100" height="75" fill="#101726"/>
-<circle cx="50" cy="28" r="12" fill="#f0b44c"/>
-<rect x="44" y="40" width="12" height="25" rx="2" fill="#142030"/>
+<circle cx="50" cy="28" r="12" fill="#f4f4f2"/>
+<rect x="44" y="40" width="12" height="25" rx="2" fill="#e8e8e4"/>
 </svg>
 </div>
 <div class="title">Aurelius, l'ammazza conigli</div>
@@ -171,6 +193,14 @@ button{border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(
 </article>
 
 </section>
+
+<aside class="promo">
+<div>
+<p class="ptitle">Come sviluppare un gioco libero</p>
+<p class="psub">Guida gratuita per principianti</p>
+</div>
+<span class="pbtn">Scopri di più</span>
+</aside>
 
 <script>
 // ricerca semplice
