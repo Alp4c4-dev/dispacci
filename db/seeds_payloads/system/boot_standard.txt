@@ -2,3 +2,5 @@ Ciao {{name}}, bentornatə nel Portale!
 
 Digita /resistenza per visualizzare i progressi che hai/abbiamo fatto finora. 
 Digita /cronologia per rivedere le ultime parole chiave che hai utilizzato.
+
+Se ti senti persə, chiedi un /indizio
